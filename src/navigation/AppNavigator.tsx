@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useStore } from '../store/useStore';
 import { COLORS } from '../constants';
@@ -16,7 +16,7 @@ import ActivityScreen from '../screens/Activity/ActivityScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
   return (
