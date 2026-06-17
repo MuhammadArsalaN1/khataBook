@@ -11,9 +11,14 @@ import { useResponsiveDimensions, responsiveFontSize, responsiveSpacing } from '
 import { animationTimings } from '../../utils/animations';
 import { WALLETS } from '../../constants';
 import { projectCashFlow } from '../../utils/cashFlow';
+import { getCategoryTrends } from '../../utils/advancedAnalytics';
 import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
 import CashFlowCard from '../../components/cards/CashFlowCard';
+import GradientCard from '../../components/cards/GradientCard';
+import QuickActionButton from '../../components/common/QuickActionButton';
+import SectionHeader from '../../components/common/SectionHeader';
+import CategoryInsight from '../../components/cards/CategoryInsight';
 
 const W = Dimensions.get('window').width;
 
