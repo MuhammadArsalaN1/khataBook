@@ -2,7 +2,7 @@ export type UserRole = 'admin' | 'user';
 
 export type ExpenseType = 'personal' | 'office' | 'farm';
 
-export type PaymentMethod = 'cash' | 'bank' | 'digital';
+export type PaymentMethod = 'cash' | 'bank' | 'digital' | 'jazzcash' | 'paypal' | 'payoneer';
 
 export type ExpenseStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 
@@ -73,4 +73,15 @@ export interface MonthlyComparison {
   office: number;
   farm: number;
   change?: number;
+}
+
+export interface Wallet {
+  id: string;
+  userId: string;
+  provider: PaymentMethod;
+  balance: number;
+  month: number;
+  year: number;
+  createdAt: string;
+  updatedAt: string;
 }

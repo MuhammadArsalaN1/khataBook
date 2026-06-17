@@ -44,6 +44,10 @@ export const COLORS = {
   white: '#FFFFFF',
   dark: '#0F172A',
   overlay: 'rgba(15,23,42,0.6)',
+  // Glass-morphism
+  glassLight: 'rgba(255,255,255,0.15)',
+  glassMedium: 'rgba(255,255,255,0.25)',
+  glassDark: 'rgba(15,23,42,0.1)',
   // Chart palette
   chart: ['#4F46E5','#7C3AED','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899','#14B8A6'],
 };
@@ -71,6 +75,23 @@ export const TYPE_ICONS: Record<ExpenseType, string> = {
   office: '🏢',
   farm: '🐐',
 };
+
+export const PAYMENT_METHODS = {
+  cash: { label: 'Cash', icon: '💵', color: '#10B981' },
+  bank: { label: 'Bank Transfer', icon: '🏦', color: '#3B82F6' },
+  digital: { label: 'Digital', icon: '📱', color: '#8B5CF6' },
+  jazzcash: { label: 'JazzCash', icon: '📞', color: '#E52C2C' },
+  paypal: { label: 'PayPal', icon: '🌐', color: '#003087' },
+  payoneer: { label: 'Payoneer', icon: '💳', color: '#07A41E' },
+};
+
+export const WALLETS = [
+  { id: 'cash', name: 'Cash', icon: '💵', color: PAYMENT_METHODS.cash.color },
+  { id: 'bank', name: 'Bank', icon: '🏦', color: PAYMENT_METHODS.bank.color },
+  { id: 'jazzcash', name: 'JazzCash', icon: '📞', color: PAYMENT_METHODS.jazzcash.color },
+  { id: 'paypal', name: 'PayPal', icon: '🌐', color: PAYMENT_METHODS.paypal.color },
+  { id: 'payoneer', name: 'Payoneer', icon: '💳', color: PAYMENT_METHODS.payoneer.color },
+];
 
 export const STORAGE_KEYS = {
   EXPENSES: 'khata_expenses',
