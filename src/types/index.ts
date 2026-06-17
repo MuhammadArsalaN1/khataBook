@@ -30,6 +30,7 @@ export interface Expense {
   receiptUri?: string;
   isRecurring: boolean;
   recurringMonths?: number[];
+  tags?: string[];
 }
 
 export interface ActivityLog {

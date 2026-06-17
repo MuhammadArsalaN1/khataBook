@@ -9,8 +9,10 @@ import { COLORS, TYPE_COLORS, TYPE_LABELS } from '../../constants';
 import {
   getMonthlyComparisons, getCategoryBreakdown, getUserContribution, getSmartInsights,
 } from '../../utils/analytics';
+import { generateInsightReport, detectRecurringPatterns } from '../../utils/advancedAnalytics';
 import { ExpenseType } from '../../types';
 import { USERS } from '../../constants';
+import { responsiveFontSize, responsiveSpacing } from '../../utils/responsive';
 
 const W = Dimensions.get('window').width - 48;
 
@@ -74,6 +76,8 @@ export default function AnalyticsScreen() {
   const catBreakdown = useMemo(() => getCategoryBreakdown(expenses, catType === 'all' ? undefined : catType).slice(0, 8), [expenses, catType]);
   const insights = useMemo(() => getSmartInsights(expenses), [expenses]);
   const userContrib = useMemo(() => getUserContribution(expenses), [expenses]);
+  const advancedInsights = useMemo(() => generateInsightReport(expenses), [expenses]);
+  const recurringPatterns = useMemo(() => detectRecurringPatterns(expenses), [expenses]);
 
   const typeData = useMemo(() => {
     const latest = comparisons[comparisons.length - 1];
@@ -194,6 +198,72 @@ export default function AnalyticsScreen() {
           }))} />
         </View>
 
+        {/* Spending Insights */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>💡 Spending Insights</Text>
+          <View style={styles.insightGrid}>
+            <View style={styles.insightItem}>
+              <Text style={styles.insightEmoji}>⚡</Text>
+              <Text style={styles.insightLabel}>Avg Daily</Text>
+              <Text style={styles.insightVal}>Rs. {advancedInsights.spendingVelocity.toFixed(0)}</Text>
+            </View>
+            <View style={styles.insightItem}>
+              <Text style={styles.insightEmoji}>📈</Text>
+              <Text style={styles.insightLabel}>Variability</Text>
+              <Text style={styles.insightVal}>{advancedInsights.costVariability.toFixed(0)}%</Text>
+            </View>
+            <View style={styles.insightItem}>
+              <Text style={styles.insightEmoji}>🔄</Text>
+              <Text style={styles.insightLabel}>Recurring</Text>
+              <Text style={styles.insightVal}>{recurringPatterns.length}</Text>
+            </View>
+            <View style={styles.insightItem}>
+              <Text style={styles.insightEmoji}>🎯</Text>
+              <Text style={styles.insightLabel}>Top Category</Text>
+              <Text style={[styles.insightVal, { fontSize: 12 }]}>
+                {advancedInsights.topCategories[0]?.category ?? 'N/A'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Category Trends */}
+        {advancedInsights.topCategories.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📊 Category Trends</Text>
+            {advancedInsights.topCategories.map((trend, i) => (
+              <View key={i} style={[styles.trendRow, i < advancedInsights.topCategories.length - 1 && styles.trendRowBorder]}>
+                <View>
+                  <Text style={styles.trendCategory}>{trend.category}</Text>
+                  <Text style={styles.trendAmount}>Rs. {trend.thisMonth.toLocaleString()}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.trendChange, { color: trend.trend === 'up' ? COLORS.danger : COLORS.success }]}>
+                    {trend.trend === 'up' ? '↑' : '↓'} {Math.abs(trend.change).toFixed(0)}%
+                  </Text>
+                  <Text style={styles.trendCompare}>vs Rs. {trend.lastMonth.toLocaleString()}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Recurring Patterns */}
+        {recurringPatterns.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>🔁 Recurring Patterns</Text>
+            {recurringPatterns.map((pattern, i) => (
+              <View key={i} style={[styles.patternRow, i < recurringPatterns.length - 1 && styles.patternRowBorder]}>
+                <View>
+                  <Text style={styles.patternCategory}>{pattern.category}</Text>
+                  <Text style={styles.patternFreq}>{pattern.frequency.toFixed(1)}x/month</Text>
+                </View>
+                <Text style={styles.patternAmount}>Rs. {pattern.averageAmount.toLocaleString()}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
@@ -203,9 +273,9 @@ export default function AnalyticsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   scroll: { flex: 1, paddingHorizontal: 16 },
-  title: { fontSize: 22, fontWeight: '800', color: COLORS.text, paddingTop: 16, marginBottom: 14 },
-  card: { backgroundColor: COLORS.white, borderRadius: 14, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 14 },
+  title: { fontSize: responsiveFontSize(22), fontWeight: '800', color: COLORS.text, paddingTop: 16, marginBottom: 14 },
+  card: { backgroundColor: COLORS.white, borderRadius: 14, padding: responsiveSpacing(16), marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2, borderWidth: 1, borderColor: COLORS.border },
+  cardTitle: { fontSize: responsiveFontSize(15), fontWeight: '700', color: COLORS.text, marginBottom: 14 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   periodRow: { flexDirection: 'row', gap: 4 },
   periodBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border },
@@ -227,4 +297,15 @@ const styles = StyleSheet.create({
   filterChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   filterText: { fontSize: 11, color: COLORS.textLight },
   filterTextActive: { color: COLORS.white, fontWeight: '600' },
+  trendRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 },
+  trendRowBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.divider },
+  trendCategory: { fontSize: responsiveFontSize(13), fontWeight: '600', color: COLORS.text },
+  trendAmount: { fontSize: responsiveFontSize(12), color: COLORS.textLight, marginTop: 2 },
+  trendChange: { fontSize: responsiveFontSize(12), fontWeight: '700' },
+  trendCompare: { fontSize: responsiveFontSize(10), color: COLORS.textLight, marginTop: 2 },
+  patternRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
+  patternRowBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.divider },
+  patternCategory: { fontSize: responsiveFontSize(13), fontWeight: '600', color: COLORS.text },
+  patternFreq: { fontSize: responsiveFontSize(11), color: COLORS.textLight, marginTop: 2 },
+  patternAmount: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
 });
