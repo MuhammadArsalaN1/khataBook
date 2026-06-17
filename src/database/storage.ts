@@ -8,7 +8,7 @@ import {
   serverTimestamp, getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Expense, ActivityLog, Budget } from '../types';
+import { Expense, ActivityLog, Budget, Wallet } from '../types';
 
 // ── Collection refs ──────────────────────────────────────────────────────────
 export const expensesCol = () => collection(db, 'expenses');
@@ -68,4 +68,18 @@ export const upsertIncomeDoc = (income: any) =>
 export const subscribeIncomes = (cb: (data: any[]) => void): Unsubscribe =>
   onSnapshot(incomesCol(), snap =>
     cb(snap.docs.map(d => d.data()))
+  );
+
+// ── Wallets ───────────────────────────────────────────────────────────────
+export const walletsCol = () => collection(db, 'wallets');
+
+export const upsertWalletDoc = (wallet: Wallet) =>
+  setDoc(doc(db, 'wallets', wallet.id), wallet);
+
+export const deleteWalletDoc = (id: string) =>
+  deleteDoc(doc(db, 'wallets', id));
+
+export const subscribeWallets = (cb: (data: Wallet[]) => void): Unsubscribe =>
+  onSnapshot(walletsCol(), snap =>
+    cb(snap.docs.map(d => d.data() as Wallet))
   );

@@ -5,11 +5,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import {
-  subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes,
+  subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes, subscribeWallets,
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
-  addLogDoc, upsertBudgetDoc, upsertIncomeDoc, saveSettings, getSettings,
+  addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, saveSettings, getSettings,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet } from '../types';
 import { USERS } from '../constants';
 
 // ── Global state ─────────────────────────────────────────────────────────────
@@ -18,6 +18,7 @@ interface AppState {
   activityLogs: ActivityLog[];
   budgets: Budget[];
   incomes: any[];
+  wallets: Wallet[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
@@ -31,6 +32,7 @@ let state: AppState = {
   activityLogs: [],
   budgets: [],
   incomes: [],
+  wallets: [],
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
@@ -49,12 +51,14 @@ let unsubExpenses: (() => void) | null = null;
 let unsubLogs: (() => void) | null = null;
 let unsubBudgets: (() => void) | null = null;
 let unsubIncomes: (() => void) | null = null;
+let unsubWallets: (() => void) | null = null;
 
 function startListeners() {
   unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
   unsubLogs = subscribeLogs(activityLogs => setState({ activityLogs }));
   unsubBudgets = subscribeBudgets(budgets => setState({ budgets }));
   unsubIncomes = subscribeIncomes(incomes => setState({ incomes }));
+  unsubWallets = subscribeWallets(wallets => setState({ wallets }));
 }
 
 function stopListeners() {
@@ -62,6 +66,7 @@ function stopListeners() {
   unsubLogs?.();     unsubLogs = null;
   unsubBudgets?.();  unsubBudgets = null;
   unsubIncomes?.();  unsubIncomes = null;
+  unsubWallets?.();  unsubWallets = null;
 }
 
 // ── Firebase Auth observer ────────────────────────────────────────────────────
@@ -86,6 +91,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       expenses: [],
       activityLogs: [],
       budgets: [],
+      wallets: [],
       authLoading: false,
       dataLoading: false,
       authError: null,
@@ -205,6 +211,24 @@ export function useStore() {
     await saveSettings({ approvalMode: next });
   }, []);
 
+  // ── Wallets ───────────────────────────────────────────────────────────────
+  const saveWallet = useCallback(async (wallet: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const id = `wlt_${wallet.userId}_${wallet.provider}_${wallet.month}_${wallet.year}`;
+    const now = new Date().toISOString();
+    const existing = state.wallets.find(w => w.id === id);
+    const walletDoc: Wallet = {
+      ...wallet,
+      id,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+    await upsertWalletDoc(walletDoc);
+  }, []);
+
+  const deleteWallet = useCallback(async (id: string) => {
+    await deleteWalletDoc(id);
+  }, []);
+
   return {
     ...state,
     loading: state.authLoading || state.dataLoading,
@@ -217,5 +241,7 @@ export function useStore() {
     saveBudget,
     saveIncome,
     toggleApprovalMode,
+    saveWallet,
+    deleteWallet,
   };
 }

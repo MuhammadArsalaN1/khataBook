@@ -73,6 +73,20 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
+        {/* Wallets */}
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Wallet')} activeOpacity={0.7}>
+          <View style={styles.earningsRow}>
+            <View style={styles.earningsIconBox} style={{ backgroundColor: '#E0F2FE' }}>
+              <Text style={styles.earningsIcon}>👛</Text>
+            </View>
+            <View style={styles.earningsInfo}>
+              <Text style={styles.earningsTitle}>Manage Wallets</Text>
+              <Text style={styles.earningsDesc}>Track balances across payment methods</Text>
+            </View>
+            <Text style={styles.earningsChevron}>›</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Approval Mode — Admin only */}
         {currentUser?.role === 'admin' && (
           <View style={styles.card}>

@@ -9,13 +9,14 @@ import { getDashboardStats, getMonthlyComparisons, getCategoryBreakdown, filterB
 import { ExpenseType } from '../../types';
 import { useResponsiveDimensions, responsiveFontSize, responsiveSpacing } from '../../utils/responsive';
 import { animationTimings } from '../../utils/animations';
+import { WALLETS } from '../../constants';
 import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
 
 const W = Dimensions.get('window').width;
 
 export default function DashboardScreenNew() {
-  const { expenses, incomes, currentUser, budgets } = useStore();
+  const { expenses, incomes, currentUser, budgets, wallets } = useStore();
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
   const now = new Date();
@@ -44,6 +45,20 @@ export default function DashboardScreenNew() {
   }), [incomeByType, stats]);
 
   const totalBalance = totalIncome - stats.monthly;
+
+  // Wallet calculations
+  const currentWallets = useMemo(() =>
+    WALLETS.map(w => {
+      const wallet = wallets.find(
+        wt => wt.userId === currentUser?.id &&
+        wt.provider === w.id &&
+        wt.month === month &&
+        wt.year === year
+      );
+      return { ...w, balance: wallet?.balance ?? 0 };
+    }).filter(w => w.balance > 0).slice(0, 3),
+    [wallets, currentUser, month, year]
+  );
 
   // User stats
   const userStats = useMemo(() => USERS.map(u => ({
@@ -281,6 +296,31 @@ export default function DashboardScreenNew() {
               })
             )}
           </View>
+
+          {/* ── WALLET OVERVIEW ────────────────────────── */}
+          {currentWallets.length > 0 && (
+            <>
+              <View style={styles.walletHeader}>
+                <Text style={styles.sectionTitle}>Wallet Balance</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
+                  <Text style={styles.walletLink}>Manage →</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.walletsGrid}>
+                {currentWallets.map((wallet) => (
+                  <View key={wallet.id} style={styles.walletItem}>
+                    <View style={[styles.walletItemIcon, { backgroundColor: wallet.color + '20' }]}>
+                      <Text style={styles.walletItemIconText}>{wallet.icon}</Text>
+                    </View>
+                    <Text style={styles.walletItemName}>{wallet.name}</Text>
+                    <Text style={styles.walletItemBalance}>
+                      Rs. {wallet.balance.toLocaleString()}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
           <View style={{ height: 100 }} />
         </View>
@@ -555,5 +595,57 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     paddingVertical: 20,
     fontSize: responsiveFontSize(13),
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  walletLink: {
+    fontSize: responsiveFontSize(12),
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  walletsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 14,
+  },
+  walletItem: {
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: responsiveSpacing(12),
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  walletItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  walletItemIconText: {
+    fontSize: 18,
+  },
+  walletItemName: {
+    fontSize: responsiveFontSize(11),
+    fontWeight: '600',
+    color: COLORS.textMed,
+  },
+  walletItemBalance: {
+    fontSize: responsiveFontSize(13),
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 4,
   },
 });
