@@ -10,8 +10,10 @@ import { ExpenseType } from '../../types';
 import { useResponsiveDimensions, responsiveFontSize, responsiveSpacing } from '../../utils/responsive';
 import { animationTimings } from '../../utils/animations';
 import { WALLETS } from '../../constants';
+import { projectCashFlow } from '../../utils/cashFlow';
 import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
+import CashFlowCard from '../../components/cards/CashFlowCard';
 
 const W = Dimensions.get('window').width;
 
@@ -60,6 +62,13 @@ export default function DashboardScreenNew() {
     [wallets, currentUser, month, year]
   );
 
+  // Cash flow projection
+  const totalWalletBalance = currentWallets.reduce((sum, w) => sum + w.balance, 0);
+  const cashFlowProjection = useMemo(() =>
+    projectCashFlow(expenses, incomes, budgets, totalWalletBalance),
+    [expenses, incomes, budgets, totalWalletBalance]
+  );
+
   // User stats
   const userStats = useMemo(() => USERS.map(u => ({
     user: u,
@@ -97,6 +106,9 @@ export default function DashboardScreenNew() {
         </View>
 
         <View style={styles.body}>
+          {/* ── CASH FLOW PROJECTION ───────────────────── */}
+          <CashFlowCard projection={cashFlowProjection} />
+
           {/* ── INCOME VS EXPENSE CARDS ────────────────── */}
           <View style={styles.balanceRow}>
             <View style={[styles.balanceCard, { backgroundColor: COLORS.success + '15', borderColor: COLORS.success }]}>
