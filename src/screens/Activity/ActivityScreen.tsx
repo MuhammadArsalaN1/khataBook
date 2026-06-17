@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet,  TextInput,
+  View, Text, FlatList, StyleSheet, TextInput, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
@@ -73,14 +73,15 @@ export default function ActivityScreen() {
 
         <View style={styles.filterRow}>
           {(['all', ...USERS.map(u => u.id)] as const).map(uid => (
-            <View key={uid} style={{ marginRight: 6 }}>
-              <Text
-                style={[styles.filterChip, filterUser === uid && styles.filterChipActive]}
-                onPress={() => setFilterUser(uid)}
-              >
+            <TouchableOpacity
+              key={uid}
+              style={[styles.filterChip, filterUser === uid && styles.filterChipActive]}
+              onPress={() => setFilterUser(uid)}
+            >
+              <Text style={[styles.filterChipText, filterUser === uid && styles.filterChipTextActive]}>
                 {uid === 'all' ? 'All' : USERS.find(u => u.id === uid)?.name}
               </Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -105,22 +106,49 @@ export default function ActivityScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
-  title: { fontSize: 22, fontWeight: '800', color: COLORS.text, marginBottom: 12 },
-  search: { backgroundColor: COLORS.white, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, padding: 12, fontSize: 14, color: COLORS.text, marginBottom: 10 },
-  filterRow: { flexDirection: 'row', marginBottom: 8 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.white, fontSize: 12, color: COLORS.textLight, overflow: 'hidden' },
-  filterChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary, color: COLORS.white, fontWeight: '600' },
-  count: { fontSize: 12, color: COLORS.textLight, marginBottom: 8 },
-  card: { flexDirection: 'row', backgroundColor: COLORS.white, borderRadius: 12, padding: 12, marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-  iconBox: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  icon: { fontSize: 18 },
+  title: { fontSize: 24, fontWeight: '700', color: COLORS.text, marginBottom: 14 },
+  search: {
+    backgroundColor: COLORS.cardSecondary,
+    borderRadius: 12,
+    borderWidth: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  filterRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 10 },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 0,
+    backgroundColor: COLORS.cardSecondary,
+  },
+  filterChipActive: { backgroundColor: COLORS.primary },
+  filterChipText: { fontSize: 12, color: COLORS.textLight, fontWeight: '700' },
+  filterChipTextActive: { color: COLORS.white, fontWeight: '700' },
+  count: { fontSize: 12, color: COLORS.textLight, marginBottom: 10, fontWeight: '600' },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  iconBox: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  icon: { fontSize: 20 },
   info: { flex: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   user: { fontSize: 14, fontWeight: '700', color: COLORS.text },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeText: { fontSize: 10, fontWeight: '700' },
-  details: { fontSize: 12, color: COLORS.textLight, marginBottom: 3 },
-  time: { fontSize: 11, color: COLORS.textLight + '99' },
+  details: { fontSize: 13, color: COLORS.text, marginBottom: 4, fontWeight: '500' },
+  time: { fontSize: 11, color: COLORS.textLight, fontWeight: '500' },
   empty: { alignItems: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 14, color: COLORS.textLight },
+  emptyText: { fontSize: 14, color: COLORS.textLight, fontWeight: '600' },
 });
