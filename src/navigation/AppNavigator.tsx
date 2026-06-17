@@ -22,9 +22,16 @@ const Stack = createNativeStackNavigator();
 
 function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 20 }}>{icon}</Text>
-      <Text style={{ fontSize: 10, color: focused ? COLORS.primary : COLORS.textLight, fontWeight: focused ? '700' : '400' }}>
+    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 22 }}>{icon}</Text>
+      <Text
+        style={{
+          fontSize: 10,
+          color: focused ? COLORS.primary : COLORS.textLight,
+          fontWeight: focused ? '700' : '600',
+          marginTop: 3,
+        }}
+      >
         {label}
       </Text>
     </View>
@@ -35,7 +42,20 @@ function MainTabs() {
   const { currentUser } = useStore();
   return (
     <Tab.Navigator
-      screenOptions={{ headerShown: false, tabBarShowLabel: false, tabBarStyle: { height: 64, paddingBottom: 8 } }}
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          height: 68,
+          paddingBottom: 10,
+          paddingTop: 8,
+          backgroundColor: COLORS.white,
+          borderTopWidth: 1,
+          borderTopColor: COLORS.border,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+      }}
     >
       <Tab.Screen
         name="Dashboard"
