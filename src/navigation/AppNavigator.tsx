@@ -14,6 +14,7 @@ import AnalyticsScreen from '../screens/Analytics/AnalyticsScreen';
 import ReportsScreen from '../screens/Reports/ReportsScreen';
 import ActivityScreen from '../screens/Activity/ActivityScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
+import EarningsScreen from '../screens/Settings/EarningsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -76,6 +77,7 @@ function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Main" component={MainTabs} />
       <Stack.Screen name="AddExpense" component={AddExpenseScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="Earnings" component={EarningsScreen} options={{ presentation: 'card' }} />
     </Stack.Navigator>
   );
 }

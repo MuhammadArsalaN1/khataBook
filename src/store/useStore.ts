@@ -5,9 +5,9 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import {
-  subscribeExpenses, subscribeLogs, subscribeBudgets,
+  subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes,
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
-  addLogDoc, upsertBudgetDoc, saveSettings, getSettings,
+  addLogDoc, upsertBudgetDoc, upsertIncomeDoc, saveSettings, getSettings,
 } from '../database/storage';
 import { Expense, ActivityLog, Budget, User, ExpenseType } from '../types';
 import { USERS } from '../constants';
@@ -17,6 +17,7 @@ interface AppState {
   expenses: Expense[];
   activityLogs: ActivityLog[];
   budgets: Budget[];
+  incomes: any[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
@@ -29,6 +30,7 @@ let state: AppState = {
   expenses: [],
   activityLogs: [],
   budgets: [],
+  incomes: [],
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
@@ -46,17 +48,20 @@ const setState = (patch: Partial<AppState>) => { state = { ...state, ...patch };
 let unsubExpenses: (() => void) | null = null;
 let unsubLogs: (() => void) | null = null;
 let unsubBudgets: (() => void) | null = null;
+let unsubIncomes: (() => void) | null = null;
 
 function startListeners() {
   unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
   unsubLogs = subscribeLogs(activityLogs => setState({ activityLogs }));
   unsubBudgets = subscribeBudgets(budgets => setState({ budgets }));
+  unsubIncomes = subscribeIncomes(incomes => setState({ incomes }));
 }
 
 function stopListeners() {
   unsubExpenses?.(); unsubExpenses = null;
   unsubLogs?.();     unsubLogs = null;
   unsubBudgets?.();  unsubBudgets = null;
+  unsubIncomes?.();  unsubIncomes = null;
 }
 
 // ── Firebase Auth observer ────────────────────────────────────────────────────
@@ -187,6 +192,12 @@ export function useStore() {
     await upsertBudgetDoc({ ...budget, id });
   }, []);
 
+  // ── Income ────────────────────────────────────────────────────────────────
+  const saveIncome = useCallback(async (type: ExpenseType, amount: number, month: number, year: number) => {
+    const id = `inc_${type}_${month}_${year}`;
+    await upsertIncomeDoc({ id, type, amount, month, year, createdAt: new Date().toISOString() });
+  }, []);
+
   // ── Settings ──────────────────────────────────────────────────────────────
   const toggleApprovalMode = useCallback(async () => {
     const next = !state.approvalMode;
@@ -204,6 +215,7 @@ export function useStore() {
     deleteExpense,
     approveExpense,
     saveBudget,
+    saveIncome,
     toggleApprovalMode,
   };
 }

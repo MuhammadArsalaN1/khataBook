@@ -58,3 +58,14 @@ export const subscribeBudgets = (cb: (data: Budget[]) => void): Unsubscribe =>
   onSnapshot(budgetsCol(), snap =>
     cb(snap.docs.map(d => d.data() as Budget))
   );
+
+// ── Income ────────────────────────────────────────────────────────────────
+export const incomesCol = () => collection(db, 'incomes');
+
+export const upsertIncomeDoc = (income: any) =>
+  setDoc(doc(db, 'incomes', income.id), income);
+
+export const subscribeIncomes = (cb: (data: any[]) => void): Unsubscribe =>
+  onSnapshot(incomesCol(), snap =>
+    cb(snap.docs.map(d => d.data()))
+  );

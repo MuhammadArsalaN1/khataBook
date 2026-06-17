@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, 
+  View, Text, ScrollView, StyleSheet,
   TouchableOpacity, Switch, TextInput, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, TYPE_LABELS, USERS } from '../../constants';
 import { ExpenseType } from '../../types';
 
 export default function SettingsScreen() {
+  const navigation = useNavigation<any>();
   const { currentUser, logout, approvalMode, toggleApprovalMode, budgets, saveBudget } = useStore();
   const now = new Date();
   const month = now.getMonth() + 1;
@@ -56,6 +58,20 @@ export default function SettingsScreen() {
             <Text style={styles.logoutBtnText}>Switch User</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Earnings & Income */}
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Earnings')} activeOpacity={0.7}>
+          <View style={styles.earningsRow}>
+            <View style={styles.earningsIconBox}>
+              <Text style={styles.earningsIcon}>💰</Text>
+            </View>
+            <View style={styles.earningsInfo}>
+              <Text style={styles.earningsTitle}>Manage Earnings & Income</Text>
+              <Text style={styles.earningsDesc}>Set monthly income for each category</Text>
+            </View>
+            <Text style={styles.earningsChevron}>›</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Approval Mode — Admin only */}
         {currentUser?.role === 'admin' && (
@@ -149,4 +165,11 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   infoLabel: { fontSize: 13, color: COLORS.textLight },
   infoValue: { fontSize: 13, fontWeight: '600', color: COLORS.text },
+  earningsRow: { flexDirection: 'row', alignItems: 'center' },
+  earningsIconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  earningsIcon: { fontSize: 20 },
+  earningsInfo: { flex: 1 },
+  earningsTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  earningsDesc: { fontSize: 12, color: COLORS.textLight, marginTop: 2 },
+  earningsChevron: { fontSize: 20, color: COLORS.textLight, marginLeft: 8 },
 });
