@@ -1,161 +1,202 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Expense, ActivityLog, Budget, User, ExpenseType, ExpenseStatus, ActionType } from '../types';
-import * as storage from '../database/storage';
-import { format } from 'date-fns';
+import {
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  User as FirebaseUser,
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
+import {
+  subscribeExpenses, subscribeLogs, subscribeBudgets,
+  addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
+  addLogDoc, upsertBudgetDoc, saveSettings, getSettings,
+} from '../database/storage';
+import { Expense, ActivityLog, Budget, User, ExpenseType } from '../types';
+import { USERS } from '../constants';
 
-let globalState: AppState = {
-  expenses: [],
-  activityLogs: [],
-  budgets: [],
-  currentUser: null,
-  approvalMode: false,
-  loading: true,
-};
-
-type Listener = () => void;
-const listeners: Set<Listener> = new Set();
-
-function notify() {
-  listeners.forEach(l => l());
-}
-
+// ── Global state ─────────────────────────────────────────────────────────────
 interface AppState {
   expenses: Expense[];
   activityLogs: ActivityLog[];
   budgets: Budget[];
   currentUser: User | null;
+  firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
-  loading: boolean;
+  authLoading: boolean;
+  dataLoading: boolean;
+  authError: string | null;
 }
 
-async function loadAll() {
-  const [expenses, activityLogs, budgets, currentUser, approvalMode] = await Promise.all([
-    storage.getExpenses(),
-    storage.getActivityLogs(),
-    storage.getBudgets(),
-    storage.getCurrentUser(),
-    storage.getApprovalMode(),
-  ]);
-  globalState = { expenses, activityLogs, budgets, currentUser, approvalMode, loading: false };
-  notify();
+let state: AppState = {
+  expenses: [],
+  activityLogs: [],
+  budgets: [],
+  currentUser: null,
+  firebaseUser: null,
+  approvalMode: false,
+  authLoading: true,
+  dataLoading: true,
+  authError: null,
+};
+
+type Listener = () => void;
+const listeners = new Set<Listener>();
+const notify = () => listeners.forEach(l => l());
+const setState = (patch: Partial<AppState>) => { state = { ...state, ...patch }; notify(); };
+
+// ── Firestore unsubscribe handles ─────────────────────────────────────────────
+let unsubExpenses: (() => void) | null = null;
+let unsubLogs: (() => void) | null = null;
+let unsubBudgets: (() => void) | null = null;
+
+function startListeners() {
+  unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
+  unsubLogs = subscribeLogs(activityLogs => setState({ activityLogs }));
+  unsubBudgets = subscribeBudgets(budgets => setState({ budgets }));
 }
 
-loadAll();
+function stopListeners() {
+  unsubExpenses?.(); unsubExpenses = null;
+  unsubLogs?.();     unsubLogs = null;
+  unsubBudgets?.();  unsubBudgets = null;
+}
 
+// ── Firebase Auth observer ────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (fbUser) => {
+  if (fbUser) {
+    const appUser = USERS.find(u => u.email === fbUser.email) ?? null;
+    const settings = await getSettings();
+    setState({
+      firebaseUser: fbUser,
+      currentUser: appUser,
+      approvalMode: settings.approvalMode === true,
+      authLoading: false,
+      dataLoading: true,
+      authError: null,
+    });
+    startListeners();
+  } else {
+    stopListeners();
+    setState({
+      firebaseUser: null,
+      currentUser: null,
+      expenses: [],
+      activityLogs: [],
+      budgets: [],
+      authLoading: false,
+      dataLoading: false,
+      authError: null,
+    });
+  }
+});
+
+// ── Activity log helper ───────────────────────────────────────────────────────
 function logActivity(log: Omit<ActivityLog, 'id' | 'timestamp'>) {
   const entry: ActivityLog = {
     ...log,
-    id: `log_${Date.now()}_${Math.random()}`,
+    id: `log_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     timestamp: new Date().toISOString(),
   };
-  globalState.activityLogs = [entry, ...globalState.activityLogs];
-  storage.saveActivityLogs(globalState.activityLogs);
+  addLogDoc(entry);
 }
 
+// ── Hook ──────────────────────────────────────────────────────────────────────
 export function useStore() {
-  const [, setTick] = useState(0);
+  const [, tick] = useState(0);
 
   useEffect(() => {
-    const listener = () => setTick(t => t + 1);
-    listeners.add(listener);
-    return () => { listeners.delete(listener); };
+    const l = () => tick(t => t + 1);
+    listeners.add(l);
+    return () => { listeners.delete(l); };
   }, []);
 
-  const login = useCallback(async (user: User) => {
-    globalState = { ...globalState, currentUser: user };
-    await storage.setCurrentUser(user);
-    notify();
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const login = useCallback(async (email: string, password: string) => {
+    setState({ authError: null, authLoading: true });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e: any) {
+      const msg =
+        e.code === 'auth/invalid-credential' ? 'Invalid email or password.' :
+        e.code === 'auth/user-not-found'     ? 'No account found with this email.' :
+        e.code === 'auth/wrong-password'     ? 'Incorrect password.' :
+        e.code === 'auth/too-many-requests'  ? 'Too many attempts. Try again later.' :
+        'Login failed. Check your connection.';
+      setState({ authError: msg, authLoading: false });
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    globalState = { ...globalState, currentUser: null };
-    await storage.setCurrentUser(null);
-    notify();
+    await signOut(auth);
   }, []);
 
+  // ── Expenses ──────────────────────────────────────────────────────────────
   const addExpense = useCallback(async (data: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
     const expense: Expense = {
       ...data,
-      id: `exp_${Date.now()}_${Math.random()}`,
+      id: `exp_${Date.now()}_${Math.random().toString(36).slice(2)}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    globalState.expenses = [expense, ...globalState.expenses];
-    await storage.saveExpenses(globalState.expenses);
+    await addExpenseDoc(expense);
     logActivity({
       userId: data.enteredBy,
-      userName: globalState.currentUser?.name ?? '',
+      userName: state.currentUser?.name ?? '',
       action: 'add',
       expenseId: expense.id,
-      details: `Added ${data.type} expense: ${data.category} - Rs. ${data.amount}`,
+      details: `Added ${data.type} expense: ${data.category} — Rs. ${data.amount}`,
     });
-    notify();
     return expense;
   }, []);
 
   const editExpense = useCallback(async (id: string, updates: Partial<Expense>) => {
-    globalState.expenses = globalState.expenses.map(e =>
-      e.id === id ? { ...e, ...updates, updatedAt: new Date().toISOString() } : e
-    );
-    await storage.saveExpenses(globalState.expenses);
+    await updateExpenseDoc(id, updates);
     logActivity({
-      userId: globalState.currentUser?.id ?? '',
-      userName: globalState.currentUser?.name ?? '',
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
       action: 'edit',
       expenseId: id,
       details: `Edited expense`,
     });
-    notify();
   }, []);
 
   const deleteExpense = useCallback(async (id: string) => {
-    const expense = globalState.expenses.find(e => e.id === id);
-    globalState.expenses = globalState.expenses.filter(e => e.id !== id);
-    await storage.saveExpenses(globalState.expenses);
+    const expense = state.expenses.find(e => e.id === id);
+    await deleteExpenseDoc(id);
     logActivity({
-      userId: globalState.currentUser?.id ?? '',
-      userName: globalState.currentUser?.name ?? '',
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
       action: 'delete',
       expenseId: id,
-      details: `Deleted expense: ${expense?.category} - Rs. ${expense?.amount}`,
+      details: `Deleted: ${expense?.category ?? ''} — Rs. ${expense?.amount ?? ''}`,
     });
-    notify();
   }, []);
 
   const approveExpense = useCallback(async (id: string, status: 'approved' | 'rejected') => {
-    await editExpense(id, { status });
+    await updateExpenseDoc(id, { status });
     logActivity({
-      userId: globalState.currentUser?.id ?? '',
-      userName: globalState.currentUser?.name ?? '',
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
       action: status === 'approved' ? 'approve' : 'reject',
       expenseId: id,
       details: `Expense ${status}`,
     });
-  }, [editExpense]);
-
-  const saveBudget = useCallback(async (budget: Omit<Budget, 'id'>) => {
-    const existing = globalState.budgets.find(
-      b => b.type === budget.type && b.month === budget.month && b.year === budget.year
-    );
-    if (existing) {
-      globalState.budgets = globalState.budgets.map(b =>
-        b.id === existing.id ? { ...b, limit: budget.limit } : b
-      );
-    } else {
-      globalState.budgets = [...globalState.budgets, { ...budget, id: `bgt_${Date.now()}` }];
-    }
-    await storage.saveBudgets(globalState.budgets);
-    notify();
   }, []);
 
+  // ── Budgets ───────────────────────────────────────────────────────────────
+  const saveBudget = useCallback(async (budget: Omit<Budget, 'id'>) => {
+    const id = `bgt_${budget.type}_${budget.month}_${budget.year}`;
+    await upsertBudgetDoc({ ...budget, id });
+  }, []);
+
+  // ── Settings ──────────────────────────────────────────────────────────────
   const toggleApprovalMode = useCallback(async () => {
-    globalState = { ...globalState, approvalMode: !globalState.approvalMode };
-    await storage.setApprovalMode(globalState.approvalMode);
-    notify();
+    const next = !state.approvalMode;
+    setState({ approvalMode: next });
+    await saveSettings({ approvalMode: next });
   }, []);
 
   return {
-    ...globalState,
+    ...state,
+    loading: state.authLoading || state.dataLoading,
     login,
     logout,
     addExpense,

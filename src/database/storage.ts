@@ -1,52 +1,60 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Expense, ActivityLog, Budget, User } from '../types';
-import { STORAGE_KEYS } from '../constants';
+// Firestore-backed storage — replaces the old AsyncStorage implementation.
+// All reads/writes go through the Firestore collections below.
+// Real-time sync is handled in useStore via onSnapshot listeners.
 
-export const getExpenses = async (): Promise<Expense[]> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEYS.EXPENSES);
-  return data ? JSON.parse(data) : [];
+import {
+  collection, doc, setDoc, deleteDoc, getDocs,
+  onSnapshot, query, orderBy, Unsubscribe, updateDoc,
+  serverTimestamp, getDoc,
+} from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { Expense, ActivityLog, Budget } from '../types';
+
+// ── Collection refs ──────────────────────────────────────────────────────────
+export const expensesCol = () => collection(db, 'expenses');
+export const logsCol = () => collection(db, 'activityLogs');
+export const budgetsCol = () => collection(db, 'budgets');
+export const settingsDoc = () => doc(db, 'settings', 'global');
+
+// ── Expenses ─────────────────────────────────────────────────────────────────
+export const addExpenseDoc = (expense: Expense) =>
+  setDoc(doc(db, 'expenses', expense.id), expense);
+
+export const updateExpenseDoc = (id: string, updates: Partial<Expense>) =>
+  updateDoc(doc(db, 'expenses', id), { ...updates, updatedAt: new Date().toISOString() });
+
+export const deleteExpenseDoc = (id: string) =>
+  deleteDoc(doc(db, 'expenses', id));
+
+// ── Activity Logs ─────────────────────────────────────────────────────────────
+export const addLogDoc = (log: ActivityLog) =>
+  setDoc(doc(db, 'activityLogs', log.id), log);
+
+// ── Budgets ───────────────────────────────────────────────────────────────────
+export const upsertBudgetDoc = (budget: Budget) =>
+  setDoc(doc(db, 'budgets', budget.id), budget);
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+export const saveSettings = (data: Record<string, unknown>) =>
+  setDoc(settingsDoc(), data, { merge: true });
+
+export const getSettings = async (): Promise<Record<string, unknown>> => {
+  const snap = await getDoc(settingsDoc());
+  return snap.exists() ? (snap.data() as Record<string, unknown>) : {};
 };
 
-export const saveExpenses = async (expenses: Expense[]): Promise<void> => {
-  await AsyncStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
-};
+// ── Real-time listeners ───────────────────────────────────────────────────────
+export const subscribeExpenses = (cb: (data: Expense[]) => void): Unsubscribe =>
+  onSnapshot(query(expensesCol(), orderBy('createdAt', 'desc')), snap =>
+    cb(snap.docs.map(d => d.data() as Expense))
+  );
 
-export const getActivityLogs = async (): Promise<ActivityLog[]> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEYS.ACTIVITY_LOGS);
-  return data ? JSON.parse(data) : [];
-};
+export const subscribeLogs = (cb: (data: ActivityLog[]) => void): Unsubscribe =>
+  onSnapshot(query(logsCol(), orderBy('timestamp', 'desc')), snap =>
+    cb(snap.docs.map(d => d.data() as ActivityLog))
+  );
 
-export const saveActivityLogs = async (logs: ActivityLog[]): Promise<void> => {
-  await AsyncStorage.setItem(STORAGE_KEYS.ACTIVITY_LOGS, JSON.stringify(logs));
-};
-
-export const getBudgets = async (): Promise<Budget[]> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEYS.BUDGETS);
-  return data ? JSON.parse(data) : [];
-};
-
-export const saveBudgets = async (budgets: Budget[]): Promise<void> => {
-  await AsyncStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(budgets));
-};
-
-export const getCurrentUser = async (): Promise<User | null> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-  return data ? JSON.parse(data) : null;
-};
-
-export const setCurrentUser = async (user: User | null): Promise<void> => {
-  if (user) {
-    await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-  } else {
-    await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-  }
-};
-
-export const getApprovalMode = async (): Promise<boolean> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEYS.APPROVAL_MODE);
-  return data === 'true';
-};
-
-export const setApprovalMode = async (enabled: boolean): Promise<void> => {
-  await AsyncStorage.setItem(STORAGE_KEYS.APPROVAL_MODE, String(enabled));
-};
+export const subscribeBudgets = (cb: (data: Budget[]) => void): Unsubscribe =>
+  onSnapshot(budgetsCol(), snap =>
+    cb(snap.docs.map(d => d.data() as Budget))
+  );

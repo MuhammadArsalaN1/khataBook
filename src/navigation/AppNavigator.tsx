@@ -81,14 +81,16 @@ function AppStack() {
 }
 
 export default function AppNavigator() {
-  const { currentUser, loading } = useStore();
+  const { currentUser, loading, authLoading } = useStore();
 
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary }}>
         <Text style={{ fontSize: 48, marginBottom: 20 }}>📒</Text>
         <ActivityIndicator size="large" color={COLORS.white} />
-        <Text style={{ color: COLORS.white, marginTop: 12, fontWeight: '600' }}>Khata Book</Text>
+        <Text style={{ color: COLORS.white, marginTop: 12, fontWeight: '600' }}>
+          {authLoading ? 'Khata Book' : 'Syncing data...'}
+        </Text>
       </View>
     );
   }
