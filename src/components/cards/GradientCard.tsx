@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, LinearGradient } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants';
 import { responsiveFontSize, responsiveSpacing } from '../../utils/responsive';
 
@@ -22,7 +23,7 @@ export default function GradientCard({
 }: GradientCardProps) {
   return (
     <LinearGradient
-      colors={gradient}
+      colors={gradient as any}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}

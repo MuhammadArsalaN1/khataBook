@@ -10,7 +10,7 @@ interface DailyProjection {
   status: 'healthy' | 'warning' | 'critical';
 }
 
-interface CashFlowProjection {
+export interface CashFlowProjection {
   currentBalance: number;
   projectedEnd: number;
   dailyProjection: DailyProjection[];

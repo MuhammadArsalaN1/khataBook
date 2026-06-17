@@ -88,6 +88,23 @@ export const TYPE_ICONS: Record<ExpenseType, string> = {
   farm: '🐐',
 };
 
+// Emoji per category for transaction rows / lists.
+export const CATEGORY_EMOJI: Record<string, string> = {
+  // personal
+  Grocery: '🛒', Fuel: '⛽', 'Utility Bills': '💡', Internet: '🌐', Medical: '💊',
+  Education: '📚', Dining: '🍽️', Shopping: '🛍️', Travel: '✈️', Entertainment: '🎬',
+  Subscriptions: '📱',
+  // office
+  Rent: '🏠', Electricity: '⚡', 'Hosting & Domains': '🖥️', 'Software Subscriptions': '💻',
+  'Marketing & Ads': '📣', Salaries: '💼', 'Office Supplies': '🗂️', Equipment: '🔧',
+  Maintenance: '🔨',
+  // farm
+  Feed: '🌾', Medicine: '💉', Vaccination: '🩹', Labor: '👷', Transportation: '🚛',
+  Water: '💧', 'Shed Maintenance': '🏚️', 'Medical Treatment': '🏥',
+  // shared
+  Miscellaneous: '📦',
+};
+
 export const PAYMENT_METHODS = {
   cash: { label: 'Cash', icon: '💵', color: '#10B981' },
   bank: { label: 'Bank Transfer', icon: '🏦', color: '#3B82F6' },

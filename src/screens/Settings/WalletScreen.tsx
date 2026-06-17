@@ -1,374 +1,252 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Modal,
+  View, Text, ScrollView, StyleSheet,
+  TouchableOpacity, Modal, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
-import { COLORS, WALLETS, PAYMENT_METHODS } from '../../constants';
-import { PaymentMethod } from '../../types';
-import { responsiveFontSize, responsiveSpacing } from '../../utils/responsive';
+import { WALLETS, CURRENCIES, COLORS } from '../../constants';
+import { PaymentMethod, Currency } from '../../types';
+import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
+import { getActiveFiscalMonth } from '../../utils/fiscalMonth';
+import { responsiveFontSize } from '../../utils/responsive';
+import AnimatedIcon from '../../components/common/AnimatedIcon';
+import NumberPad from '../../components/common/NumberPad';
 
 export default function WalletScreen() {
   const navigation = useNavigation<any>();
-  const { wallets, currentUser, saveWallet, deleteWallet } = useStore();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<PaymentMethod | null>(null);
-  const [balanceInput, setBalanceInput] = useState('');
+  const { wallets, currentUser, saveWallet, deleteWallet, exchangeRates } = useStore();
 
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
+  const fiscal = getActiveFiscalMonth();
+  const { month, year } = fiscal;
 
-  // Get current month wallet balances
-  const currentWallets = useMemo(() =>
-    WALLETS.map(w => {
-      const wallet = wallets.find(
-        wt => wt.userId === currentUser?.id &&
-        wt.provider === w.id &&
-        wt.month === month &&
-        wt.year === year
-      );
-      return { ...w, balance: wallet?.balance ?? 0, walletId: wallet?.id };
-    }),
-    [wallets, currentUser, month, year]
-  );
+  const [editing, setEditing] = useState<{ provider: PaymentMethod; currency: Currency } | null>(null);
+  const [input, setInput] = useState('0');
 
-  const totalBalance = currentWallets.reduce((sum, w) => sum + w.balance, 0);
+  // balance lookup for (provider, currency)
+  const getBalance = (provider: PaymentMethod, currency: Currency) =>
+    wallets.find(
+      w => w.userId === currentUser?.id && w.provider === provider &&
+        w.currency === currency && w.month === month && w.year === year
+    );
 
-  const handleOpenWallet = (wallet: typeof currentWallets[0]) => {
-    setSelectedWallet(wallet.id as PaymentMethod);
-    setBalanceInput(wallet.balance.toString());
-    setModalVisible(true);
+  const totalPKR = useMemo(() => {
+    return wallets
+      .filter(w => w.userId === currentUser?.id && w.month === month && w.year === year)
+      .reduce((sum, w) => sum + toPKR(w.balance, w.currency ?? 'PKR', exchangeRates), 0);
+  }, [wallets, currentUser, month, year, exchangeRates]);
+
+  const openEdit = (provider: PaymentMethod, currency: Currency) => {
+    const existing = getBalance(provider, currency);
+    setInput(existing ? existing.balance.toString() : '0');
+    setEditing({ provider, currency });
   };
 
-  const handleSaveWallet = async () => {
-    if (!selectedWallet || !currentUser) return;
-    const val = parseFloat(balanceInput);
-    if (isNaN(val) || val < 0) {
-      Alert.alert('Invalid', 'Enter a valid balance amount.');
-      return;
-    }
-    try {
-      await saveWallet({
-        userId: currentUser.id,
-        provider: selectedWallet,
-        balance: val,
-        month,
-        year,
-      });
-      setModalVisible(false);
-      setSelectedWallet(null);
-      setBalanceInput('');
-      Alert.alert('Saved', `${PAYMENT_METHODS[selectedWallet].label} wallet updated`);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to save wallet');
-    }
+  const handleSave = async () => {
+    if (!editing || !currentUser) return;
+    const val = parseFloat(input);
+    if (isNaN(val) || val < 0) { Alert.alert('Invalid', 'Enter a valid amount.'); return; }
+    await saveWallet({
+      userId: currentUser.id,
+      provider: editing.provider,
+      currency: editing.currency,
+      balance: val,
+      month, year,
+    });
+    setEditing(null);
   };
 
-  const handleDeleteWallet = async (walletId: string | undefined) => {
-    if (!walletId) return;
-    Alert.alert('Delete', 'Remove this wallet balance?', [
-      { text: 'Cancel', onPress: () => {}, style: 'cancel' },
-      {
-        text: 'Delete',
-        onPress: async () => {
-          try {
-            await deleteWallet(walletId);
-            Alert.alert('Deleted', 'Wallet removed');
-          } catch (e) {
-            Alert.alert('Error', 'Failed to delete wallet');
-          }
-        },
-        style: 'destructive',
-      },
+  const handleDelete = (provider: PaymentMethod, currency: Currency) => {
+    const existing = getBalance(provider, currency);
+    if (!existing) { setEditing(null); return; }
+    Alert.alert('Clear balance', `Remove ${WALLETS.find(w => w.id === provider)?.name} (${currency}) balance?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', style: 'destructive', onPress: async () => { await deleteWallet(existing.id); setEditing(null); } },
     ]);
   };
 
+  const editingMeta = editing ? WALLETS.find(w => w.id === editing.provider) : null;
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backBtn}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Wallets</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        {/* Total Balance */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Total Wallet Balance</Text>
-          <Text style={styles.totalAmount}>Rs. {totalBalance.toLocaleString()}</Text>
-          <Text style={styles.totalSub}>{format(now, 'MMMM yyyy')}</Text>
-        </View>
-
-        {/* Wallets Grid */}
-        <Text style={styles.sectionTitle}>Manage Wallets</Text>
-        {currentWallets.map((wallet) => (
-          <TouchableOpacity
-            key={wallet.id}
-            style={styles.walletCard}
-            onPress={() => handleOpenWallet(wallet)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.walletLeft}>
-              <View style={[styles.walletIcon, { backgroundColor: wallet.color + '20' }]}>
-                <Text style={styles.walletIconText}>{wallet.icon}</Text>
-              </View>
-              <View>
-                <Text style={styles.walletName}>{wallet.name}</Text>
-                <Text style={styles.walletBalance}>
-                  Rs. {wallet.balance.toLocaleString()}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => handleDeleteWallet(wallet.walletId)}
-              style={styles.deleteBtn}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.deleteBtnText}>🗑</Text>
+    <View style={styles.root}>
+      <LinearGradient colors={['#7C3AED', '#6D28D9', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <SafeAreaView edges={['top']}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
+              <Text style={styles.headerBtnText}>‹</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        ))}
+            <Text style={styles.headerTitle}>My Wallets</Text>
+            <View style={styles.headerBtn} />
+          </View>
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
-
-      {/* Modal for editing wallet */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modalSafe}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalBackBtn}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Update Balance</Text>
-              <TouchableOpacity onPress={handleSaveWallet}>
-                <Text style={styles.modalSaveBtn}>Save</Text>
-              </TouchableOpacity>
-            </View>
-
-            {selectedWallet && (
-              <View style={styles.modalBody}>
-                <View style={styles.selectedWalletInfo}>
-                  <Text style={styles.selectedWalletIcon}>
-                    {PAYMENT_METHODS[selectedWallet].icon}
-                  </Text>
-                  <Text style={styles.selectedWalletLabel}>
-                    {PAYMENT_METHODS[selectedWallet].label}
-                  </Text>
-                </View>
-
-                <TextInput
-                  style={styles.balanceInput}
-                  placeholder="Enter balance"
-                  placeholderTextColor={COLORS.textLight}
-                  value={balanceInput}
-                  onChangeText={setBalanceInput}
-                  keyboardType="decimal-pad"
-                  editable
-                />
-
-                <Text style={styles.inputHint}>
-                  Enter your current {PAYMENT_METHODS[selectedWallet].label} balance
-                </Text>
+          {/* Total liquid assets */}
+          <View style={styles.totalCard}>
+            <View style={styles.totalRow}>
+              <View>
+                <Text style={styles.totalLabel}>Total Liquid Assets</Text>
+                <Text style={styles.totalAmount}>{formatPKRCompact(totalPKR)}</Text>
+                <Text style={styles.totalSub}>{fiscal.label} · converted to PKR</Text>
               </View>
-            )}
+              <AnimatedIcon name="wallet" size={64} />
+            </View>
           </View>
         </SafeAreaView>
+      </LinearGradient>
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
+        {WALLETS.map(wallet => {
+          const balances = wallet.currencies.map(c => ({ currency: c, doc: getBalance(wallet.id, c) }));
+          const walletPKR = balances.reduce((s, b) => s + toPKR(b.doc?.balance ?? 0, b.currency, exchangeRates), 0);
+
+          return (
+            <LinearGradient
+              key={wallet.id}
+              colors={wallet.gradient as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.walletCard}
+            >
+              {/* Card header */}
+              <View style={styles.walletCardHeader}>
+                <View style={styles.walletCardTitle}>
+                  <View style={styles.walletIconBubble}>
+                    <AnimatedIcon name={wallet.lottie} size={32} />
+                  </View>
+                  <View>
+                    <Text style={styles.walletName}>{wallet.name}</Text>
+                    <Text style={styles.walletType}>
+                      {wallet.currencies.length > 1 ? 'Multi-currency' : 'PKR account'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.walletPKR}>≈ {formatPKRCompact(walletPKR)}</Text>
+              </View>
+
+              {/* White inner card with balances */}
+              <View style={styles.innerCard}>
+                {balances.map(({ currency, doc }, idx) => (
+                  <TouchableOpacity
+                    key={currency}
+                    style={[styles.balanceRow, idx < balances.length - 1 && styles.balanceRowBorder]}
+                    onPress={() => openEdit(wallet.id, currency)}
+                    activeOpacity={0.65}
+                  >
+                    <View style={styles.balanceLeft}>
+                      <Text style={styles.currencyFlag}>{CURRENCIES[currency].flag}</Text>
+                      <View>
+                        <Text style={styles.currencyCode}>{currency}</Text>
+                        <Text style={styles.currencyLabel}>{CURRENCIES[currency].label}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.balanceRight}>
+                      <Text style={styles.balanceAmount}>{formatMoney(doc?.balance ?? 0, currency)}</Text>
+                      <Text style={styles.editHint}>{doc ? 'Tap to edit' : 'Tap to add'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </LinearGradient>
+          );
+        })}
+      </ScrollView>
+
+      {/* Numpad edit modal */}
+      <Modal visible={!!editing} transparent animationType="slide" onRequestClose={() => setEditing(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            {editing && editingMeta && (
+              <>
+                <View style={styles.modalHeader}>
+                  <View style={[styles.modalIconBubble, { backgroundColor: editingMeta.color + '20' }]}>
+                    <AnimatedIcon name={editingMeta.lottie} size={28} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalTitle}>{editingMeta.name}</Text>
+                    <Text style={styles.modalSub}>
+                      {CURRENCIES[editing.currency].flag} {editing.currency} · {CURRENCIES[editing.currency].label}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleDelete(editing.provider, editing.currency)}>
+                    <Text style={styles.modalClear}>Clear</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.amountPreview}>
+                  <Text style={styles.amountPreviewText}>
+                    {CURRENCIES[editing.currency].symbol} {input}
+                  </Text>
+                </View>
+                <NumberPad value={input} onChange={setInput} onDone={handleSave} onClear={() => setInput('0')} />
+              </>
+            )}
+          </View>
+        </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  scroll: { flex: 1, paddingHorizontal: 16 },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
   },
-  backBtn: {
-    fontSize: responsiveFontSize(14),
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  title: {
-    fontSize: responsiveFontSize(20),
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  totalCard: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    padding: responsiveSpacing(18),
-    marginBottom: 20,
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  totalLabel: {
-    fontSize: responsiveFontSize(13),
-    color: COLORS.white,
-    fontWeight: '600',
-    opacity: 0.85,
-  },
-  totalAmount: {
-    fontSize: responsiveFontSize(28),
-    fontWeight: '800',
-    color: COLORS.white,
-    marginTop: 8,
-  },
-  totalSub: {
-    fontSize: responsiveFontSize(12),
-    color: COLORS.white,
-    opacity: 0.65,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    fontSize: responsiveFontSize(16),
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
+  headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  headerBtnText: { color: '#fff', fontSize: 34, fontWeight: '300', lineHeight: 36 },
+  headerTitle: { color: '#fff', fontSize: responsiveFontSize(18), fontWeight: '800' },
+  totalCard: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(13), fontWeight: '500' },
+  totalAmount: { color: '#fff', fontSize: responsiveFontSize(32), fontWeight: '800', marginTop: 4 },
+  totalSub: { color: 'rgba(255,255,255,0.6)', fontSize: responsiveFontSize(11), marginTop: 4, fontWeight: '500' },
+  scroll: { flex: 1 },
   walletCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: responsiveSpacing(14),
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
-    borderWidth: 0,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
-  walletLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  walletCardHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 14, paddingHorizontal: 4,
   },
-  walletIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  walletCardTitle: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  walletIconBubble: {
+    width: 48, height: 48, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  walletIconText: {
-    fontSize: 22,
+  walletName: { color: '#fff', fontSize: responsiveFontSize(17), fontWeight: '800' },
+  walletType: { color: 'rgba(255,255,255,0.8)', fontSize: responsiveFontSize(11), fontWeight: '500', marginTop: 1 },
+  walletPKR: { color: '#fff', fontSize: responsiveFontSize(13), fontWeight: '700' },
+  innerCard: { backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 14 },
+  balanceRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 13,
   },
-  walletName: {
-    fontSize: responsiveFontSize(15),
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  walletBalance: {
-    fontSize: responsiveFontSize(12),
-    color: COLORS.textLight,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  deleteBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: COLORS.dangerLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteBtnText: {
-    fontSize: 18,
-  },
-  modalSafe: {
-    flex: 1,
-    backgroundColor: COLORS.overlay,
-  },
-  modalContent: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: 200,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  modalBackBtn: {
-    fontSize: responsiveFontSize(14),
-    color: COLORS.danger,
-    fontWeight: '700',
-  },
-  modalTitle: {
-    fontSize: responsiveFontSize(16),
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  modalSaveBtn: {
-    fontSize: responsiveFontSize(14),
-    color: COLORS.success,
-    fontWeight: '700',
-  },
-  modalBody: {
-    padding: responsiveSpacing(20),
-  },
-  selectedWalletInfo: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  selectedWalletIcon: {
-    fontSize: 52,
-    marginBottom: 12,
-  },
-  selectedWalletLabel: {
-    fontSize: responsiveFontSize(18),
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  balanceInput: {
-    backgroundColor: COLORS.cardSecondary,
-    borderRadius: 12,
-    borderWidth: 0,
-    paddingHorizontal: responsiveSpacing(14),
-    paddingVertical: responsiveSpacing(12),
-    fontSize: responsiveFontSize(16),
-    color: COLORS.text,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  inputHint: {
-    fontSize: responsiveFontSize(12),
-    color: COLORS.textLight,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
+  balanceRowBorder: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  balanceLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  currencyFlag: { fontSize: 26 },
+  currencyCode: { fontSize: responsiveFontSize(14), fontWeight: '800', color: '#1E293B' },
+  currencyLabel: { fontSize: responsiveFontSize(10), color: '#94A3B8', fontWeight: '500', marginTop: 1 },
+  balanceRight: { alignItems: 'flex-end' },
+  balanceAmount: { fontSize: responsiveFontSize(15), fontWeight: '800', color: '#1E293B' },
+  editHint: { fontSize: responsiveFontSize(10), color: '#A78BFA', fontWeight: '600', marginTop: 2 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 10 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginBottom: 12 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, marginBottom: 8 },
+  modalIconBubble: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: responsiveFontSize(16), fontWeight: '800', color: '#1E293B' },
+  modalSub: { fontSize: responsiveFontSize(12), color: '#64748B', fontWeight: '500', marginTop: 1 },
+  modalClear: { fontSize: responsiveFontSize(13), color: COLORS.danger, fontWeight: '700' },
+  amountPreview: { paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center' },
+  amountPreviewText: { fontSize: responsiveFontSize(34), fontWeight: '800', color: COLORS.primary },
 });
