@@ -5,11 +5,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import {
-  subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes, subscribeWallets,
+  subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes, subscribeWallets, subscribeSavingsGoals, subscribeTemplates,
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
-  addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, saveSettings, getSettings,
+  addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, upsertSavingsGoalDoc, deleteSavingsGoalDoc, upsertTemplateDoc, deleteTemplateDoc, saveSettings, getSettings,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate } from '../types';
 import { USERS } from '../constants';
 
 // ── Global state ─────────────────────────────────────────────────────────────
@@ -19,6 +19,8 @@ interface AppState {
   budgets: Budget[];
   incomes: any[];
   wallets: Wallet[];
+  savingsGoals: SavingsGoal[];
+  templates: ExpenseTemplate[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
@@ -33,6 +35,8 @@ let state: AppState = {
   budgets: [],
   incomes: [],
   wallets: [],
+  savingsGoals: [],
+  templates: [],
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
@@ -52,6 +56,8 @@ let unsubLogs: (() => void) | null = null;
 let unsubBudgets: (() => void) | null = null;
 let unsubIncomes: (() => void) | null = null;
 let unsubWallets: (() => void) | null = null;
+let unsubSavingsGoals: (() => void) | null = null;
+let unsubTemplates: (() => void) | null = null;
 
 function startListeners() {
   unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
@@ -59,6 +65,8 @@ function startListeners() {
   unsubBudgets = subscribeBudgets(budgets => setState({ budgets }));
   unsubIncomes = subscribeIncomes(incomes => setState({ incomes }));
   unsubWallets = subscribeWallets(wallets => setState({ wallets }));
+  unsubSavingsGoals = subscribeSavingsGoals(savingsGoals => setState({ savingsGoals }));
+  unsubTemplates = subscribeTemplates(templates => setState({ templates }));
 }
 
 function stopListeners() {
@@ -67,6 +75,8 @@ function stopListeners() {
   unsubBudgets?.();  unsubBudgets = null;
   unsubIncomes?.();  unsubIncomes = null;
   unsubWallets?.();  unsubWallets = null;
+  unsubSavingsGoals?.(); unsubSavingsGoals = null;
+  unsubTemplates?.(); unsubTemplates = null;
 }
 
 // ── Firebase Auth observer ────────────────────────────────────────────────────
@@ -92,6 +102,8 @@ onAuthStateChanged(auth, async (fbUser) => {
       activityLogs: [],
       budgets: [],
       wallets: [],
+      savingsGoals: [],
+      templates: [],
       authLoading: false,
       dataLoading: false,
       authError: null,
@@ -229,6 +241,29 @@ export function useStore() {
     await deleteWalletDoc(id);
   }, []);
 
+  // ── Savings Goals ────────────────────────────────────────────────────────────
+  const saveSavingsGoal = useCallback(async (goal: Omit<SavingsGoal, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const id = `goal_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const now = new Date().toISOString();
+    const goalDoc: SavingsGoal = { ...goal, id, createdAt: now, updatedAt: now };
+    await upsertSavingsGoalDoc(goalDoc);
+  }, []);
+
+  const deleteSavingsGoal = useCallback(async (id: string) => {
+    await deleteSavingsGoalDoc(id);
+  }, []);
+
+  // ── Expense Templates ────────────────────────────────────────────────────────
+  const saveTemplate = useCallback(async (template: Omit<ExpenseTemplate, 'id' | 'createdAt'>) => {
+    const id = `tpl_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const templateDoc: ExpenseTemplate = { ...template, id, createdAt: new Date().toISOString() };
+    await upsertTemplateDoc(templateDoc);
+  }, []);
+
+  const deleteTemplate = useCallback(async (id: string) => {
+    await deleteTemplateDoc(id);
+  }, []);
+
   return {
     ...state,
     loading: state.authLoading || state.dataLoading,
@@ -243,5 +278,9 @@ export function useStore() {
     toggleApprovalMode,
     saveWallet,
     deleteWallet,
+    saveSavingsGoal,
+    deleteSavingsGoal,
+    saveTemplate,
+    deleteTemplate,
   };
 }

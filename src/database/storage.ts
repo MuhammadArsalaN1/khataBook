@@ -8,7 +8,7 @@ import {
   serverTimestamp, getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Expense, ActivityLog, Budget, Wallet } from '../types';
+import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate } from '../types';
 
 // ── Collection refs ──────────────────────────────────────────────────────────
 export const expensesCol = () => collection(db, 'expenses');
@@ -82,4 +82,32 @@ export const deleteWalletDoc = (id: string) =>
 export const subscribeWallets = (cb: (data: Wallet[]) => void): Unsubscribe =>
   onSnapshot(walletsCol(), snap =>
     cb(snap.docs.map(d => d.data() as Wallet))
+  );
+
+// ── Savings Goals ────────────────────────────────────────────────────────────
+export const savingsGoalsCol = () => collection(db, 'savingsGoals');
+
+export const upsertSavingsGoalDoc = (goal: SavingsGoal) =>
+  setDoc(doc(db, 'savingsGoals', goal.id), goal);
+
+export const deleteSavingsGoalDoc = (id: string) =>
+  deleteDoc(doc(db, 'savingsGoals', id));
+
+export const subscribeSavingsGoals = (cb: (data: SavingsGoal[]) => void): Unsubscribe =>
+  onSnapshot(savingsGoalsCol(), snap =>
+    cb(snap.docs.map(d => d.data() as SavingsGoal))
+  );
+
+// ── Expense Templates ────────────────────────────────────────────────────────
+export const templatesCol = () => collection(db, 'expenseTemplates');
+
+export const upsertTemplateDoc = (template: ExpenseTemplate) =>
+  setDoc(doc(db, 'expenseTemplates', template.id), template);
+
+export const deleteTemplateDoc = (id: string) =>
+  deleteDoc(doc(db, 'expenseTemplates', id));
+
+export const subscribeTemplates = (cb: (data: ExpenseTemplate[]) => void): Unsubscribe =>
+  onSnapshot(templatesCol(), snap =>
+    cb(snap.docs.map(d => d.data() as ExpenseTemplate))
   );

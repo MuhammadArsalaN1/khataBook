@@ -85,3 +85,27 @@ export interface Wallet {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface SavingsGoal {
+  id: string;
+  userId: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  category: ExpenseType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  type: ExpenseType;
+  category: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+  createdAt: string;
+}
