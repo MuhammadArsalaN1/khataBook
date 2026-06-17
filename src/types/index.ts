@@ -57,6 +57,15 @@ export interface RecurringExpense {
   active: boolean;
 }
 
+export interface Income {
+  id: string;
+  type: ExpenseType;
+  amount: number;
+  month: number;
+  year: number;
+  createdAt: string;
+}
+
 export interface MonthlyComparison {
   label: string;
   total: number;
