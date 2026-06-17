@@ -4,11 +4,62 @@ import {
   TouchableOpacity, Switch, TextInput, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, TYPE_LABELS, USERS } from '../../constants';
 import { ExpenseType } from '../../types';
+import { responsiveFontSize } from '../../utils/responsive';
+
+function SettingsRow({
+  icon, iconBg, label, subtitle, onPress, right,
+}: {
+  icon: string; iconBg: string; label: string; subtitle?: string;
+  onPress?: () => void; right?: React.ReactNode;
+}) {
+  return (
+    <TouchableOpacity
+      style={settingRowStyles.row}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.65 : 1}
+      disabled={!onPress}
+    >
+      <View style={[settingRowStyles.iconBg, { backgroundColor: iconBg }]}>
+        <Text style={settingRowStyles.icon}>{icon}</Text>
+      </View>
+      <View style={settingRowStyles.info}>
+        <Text style={settingRowStyles.label}>{label}</Text>
+        {subtitle ? <Text style={settingRowStyles.subtitle}>{subtitle}</Text> : null}
+      </View>
+      {right ?? <Text style={settingRowStyles.chevron}>›</Text>}
+    </TouchableOpacity>
+  );
+}
+
+const settingRowStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  iconBg: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  icon: { fontSize: 19 },
+  info: { flex: 1 },
+  label: { fontSize: responsiveFontSize(14), fontWeight: '600', color: '#1E293B' },
+  subtitle: { fontSize: responsiveFontSize(11), color: '#94A3B8', marginTop: 1, fontWeight: '500' },
+  chevron: { fontSize: 20, color: '#CBD5E1', marginLeft: 4 },
+});
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
@@ -17,7 +68,8 @@ export default function SettingsScreen() {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
-  const getBudget = (type: ExpenseType) => budgets.find(b => b.type === type && b.month === month && b.year === year);
+  const getBudget = (type: ExpenseType) =>
+    budgets.find(b => b.type === type && b.month === month && b.year === year);
 
   const [budgetInputs, setBudgetInputs] = useState<Record<ExpenseType, string>>({
     personal: getBudget('personal')?.limit.toString() ?? '',
@@ -33,157 +85,227 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Settings</Text>
-
-        {/* Profile */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Current Profile</Text>
-          <View style={styles.profileRow}>
-            <View style={[styles.avatar, { backgroundColor: currentUser?.role === 'admin' ? COLORS.primary : COLORS.secondary }]}>
-              <Text style={styles.avatarText}>{currentUser?.name?.[0]}</Text>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{currentUser?.name}</Text>
-              <Text style={styles.profileEmail}>{currentUser?.email}</Text>
-              <View style={[styles.roleBadge, { backgroundColor: currentUser?.role === 'admin' ? COLORS.primary + '20' : COLORS.secondary + '20' }]}>
-                <Text style={[styles.roleText, { color: currentUser?.role === 'admin' ? COLORS.primary : COLORS.secondary }]}>
-                  {currentUser?.role}
-                </Text>
-              </View>
-            </View>
+    <View style={styles.root}>
+      <SafeAreaView edges={['top']}>
+        {/* Profile Header */}
+        <LinearGradient
+          colors={['#7C3AED', '#6D28D9']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.profileHeader}
+        >
+          <View style={styles.profileAvatar}>
+            <Text style={styles.profileAvatarText}>{currentUser?.name?.charAt(0) ?? 'A'}</Text>
           </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-            <Text style={styles.logoutBtnText}>Switch User</Text>
-          </TouchableOpacity>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{currentUser?.name}</Text>
+            <Text style={styles.profileEmail}>{currentUser?.email}</Text>
+          </View>
+          <View style={[styles.rolePill, { backgroundColor: currentUser?.role === 'admin' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.15)' }]}>
+            <Text style={styles.rolePillText}>{currentUser?.role?.toUpperCase()}</Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Main Actions */}
+        <Text style={styles.groupLabel}>ACCOUNT</Text>
+        <View style={styles.group}>
+          <SettingsRow
+            icon="💰"
+            iconBg="#FEF3C7"
+            label="Earnings & Income"
+            subtitle="Set monthly income per category"
+            onPress={() => navigation.navigate('Earnings')}
+          />
+          <SettingsRow
+            icon="👛"
+            iconBg="#E0F2FE"
+            label="My Wallets"
+            subtitle="Track balances across payment methods"
+            onPress={() => navigation.navigate('Wallet')}
+          />
         </View>
 
-        {/* Earnings & Income */}
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Earnings')} activeOpacity={0.7}>
-          <View style={styles.earningsRow}>
-            <View style={styles.earningsIconBox}>
-              <Text style={styles.earningsIcon}>💰</Text>
-            </View>
-            <View style={styles.earningsInfo}>
-              <Text style={styles.earningsTitle}>Manage Earnings & Income</Text>
-              <Text style={styles.earningsDesc}>Set monthly income for each category</Text>
-            </View>
-            <Text style={styles.earningsChevron}>›</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Wallets */}
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Wallet')} activeOpacity={0.7}>
-          <View style={styles.earningsRow}>
-            <View style={styles.earningsIconBox} style={{ backgroundColor: '#E0F2FE' }}>
-              <Text style={styles.earningsIcon}>👛</Text>
-            </View>
-            <View style={styles.earningsInfo}>
-              <Text style={styles.earningsTitle}>Manage Wallets</Text>
-              <Text style={styles.earningsDesc}>Track balances across payment methods</Text>
-            </View>
-            <Text style={styles.earningsChevron}>›</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Approval Mode — Admin only */}
-        {currentUser?.role === 'admin' && (
-          <View style={styles.card}>
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Approval Mode</Text>
-                <Text style={styles.switchDesc}>Require admin approval for Rehan's entries</Text>
-              </View>
-              <Switch
-                value={approvalMode}
-                onValueChange={toggleApprovalMode}
-                trackColor={{ true: COLORS.primary }}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Monthly Budgets */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Monthly Budgets — {format(now, 'MMMM yyyy')}</Text>
-          {(['personal', 'office', 'farm'] as ExpenseType[]).map(type => (
-            <View key={type} style={styles.budgetRow}>
-              <Text style={styles.budgetLabel}>{TYPE_LABELS[type]}</Text>
+        <Text style={styles.groupLabel}>FINANCE</Text>
+        <View style={styles.group}>
+          <SettingsRow
+            icon="📊"
+            iconBg="#EDE9FE"
+            label="Monthly Budgets"
+            subtitle={format(now, 'MMMM yyyy')}
+            onPress={undefined}
+            right={<View />}
+          />
+          {(['personal', 'office', 'farm'] as ExpenseType[]).map((type, idx) => (
+            <View key={type} style={[styles.budgetInputRow, idx === 2 && { borderBottomWidth: 0 }]}>
+              <Text style={styles.budgetType}>{TYPE_LABELS[type]}</Text>
               <TextInput
                 style={styles.budgetInput}
                 value={budgetInputs[type]}
                 onChangeText={val => setBudgetInputs(prev => ({ ...prev, [type]: val }))}
                 keyboardType="numeric"
-                placeholder="Set limit"
-                placeholderTextColor={COLORS.textLight}
+                placeholder="Set limit..."
+                placeholderTextColor="#94A3B8"
               />
-              <TouchableOpacity style={styles.saveSmallBtn} onPress={() => saveBudgetForType(type)}>
-                <Text style={styles.saveSmallBtnText}>Save</Text>
+              <TouchableOpacity style={styles.saveBudgetBtn} onPress={() => saveBudgetForType(type)}>
+                <Text style={styles.saveBudgetBtnText}>Save</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
 
-        {/* App Info */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>About</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>App</Text>
-            <Text style={styles.infoValue}>Khata Book</Text>
+        {currentUser?.role === 'admin' && (
+          <>
+            <Text style={styles.groupLabel}>ADMIN</Text>
+            <View style={styles.group}>
+              <SettingsRow
+                icon="🔐"
+                iconBg="#FEE2E2"
+                label="Approval Mode"
+                subtitle="Require approval for Rehan's entries"
+                onPress={undefined}
+                right={
+                  <Switch
+                    value={approvalMode}
+                    onValueChange={toggleApprovalMode}
+                    trackColor={{ true: COLORS.primary, false: '#CBD5E1' }}
+                    thumbColor="#fff"
+                  />
+                }
+              />
+            </View>
+          </>
+        )}
+
+        <Text style={styles.groupLabel}>APP</Text>
+        <View style={styles.group}>
+          <View style={[settingRowStyles.row, { borderBottomWidth: 1 }]}>
+            <View style={[settingRowStyles.iconBg, { backgroundColor: '#F0FDF4' }]}>
+              <Text style={settingRowStyles.icon}>📒</Text>
+            </View>
+            <View style={settingRowStyles.info}>
+              <Text style={settingRowStyles.label}>Khata Book</Text>
+              <Text style={settingRowStyles.subtitle}>Version 1.0.0</Text>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Version</Text>
-            <Text style={styles.infoValue}>1.0.0</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Users</Text>
-            <Text style={styles.infoValue}>{USERS.map(u => u.name).join(', ')}</Text>
-          </View>
-          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-            <Text style={styles.infoLabel}>Storage</Text>
-            <Text style={styles.infoValue}>Local (Offline-first)</Text>
+          <View style={[settingRowStyles.row, { borderBottomWidth: 0 }]}>
+            <View style={[settingRowStyles.iconBg, { backgroundColor: '#FFF7ED' }]}>
+              <Text style={settingRowStyles.icon}>👥</Text>
+            </View>
+            <View style={settingRowStyles.info}>
+              <Text style={settingRowStyles.label}>Users</Text>
+              <Text style={settingRowStyles.subtitle}>{USERS.map(u => u.name).join(' & ')}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+          <Text style={styles.logoutIcon}>🚪</Text>
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  scroll: { flex: 1, paddingHorizontal: 16 },
-  title: { fontSize: 24, fontWeight: '700', color: COLORS.text, paddingTop: 16, marginBottom: 16 },
-  card: { backgroundColor: COLORS.card, borderRadius: 14, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 1, borderWidth: 0 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 14 },
-  profileRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  avatar: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  avatarText: { fontSize: 24, fontWeight: '700', color: COLORS.white },
-  profileInfo: {},
-  profileName: { fontSize: 16, fontWeight: '700', color: COLORS.text },
-  profileEmail: { fontSize: 13, color: COLORS.textLight, marginTop: 2, fontWeight: '500' },
-  roleBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 6 },
-  roleText: { fontSize: 11, fontWeight: '700' },
-  logoutBtn: { backgroundColor: COLORS.primary, borderRadius: 10, padding: 12, alignItems: 'center', marginTop: 4 },
-  logoutBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 14 },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  switchLabel: { fontSize: 15, fontWeight: '600', color: COLORS.text },
-  switchDesc: { fontSize: 12, color: COLORS.textLight, marginTop: 2, maxWidth: 220, fontWeight: '500' },
-  budgetRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  budgetLabel: { width: 70, fontSize: 13, color: COLORS.text, fontWeight: '600' },
-  budgetInput: { flex: 1, backgroundColor: COLORS.cardSecondary, borderRadius: 8, borderWidth: 0, padding: 10, fontSize: 14, color: COLORS.text, marginHorizontal: 8 },
-  saveSmallBtn: { backgroundColor: COLORS.primary, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10 },
-  saveSmallBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.divider },
-  infoLabel: { fontSize: 13, color: COLORS.textLight, fontWeight: '500' },
-  infoValue: { fontSize: 13, fontWeight: '700', color: COLORS.text },
-  earningsRow: { flexDirection: 'row', alignItems: 'center' },
-  earningsIconBox: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  earningsIcon: { fontSize: 22 },
-  earningsInfo: { flex: 1 },
-  earningsTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
-  earningsDesc: { fontSize: 13, color: COLORS.textLight, marginTop: 2, fontWeight: '500' },
-  earningsChevron: { fontSize: 20, color: COLORS.textLight, marginLeft: 8 },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  profileHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  profileAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  profileAvatarText: { color: '#fff', fontWeight: '800', fontSize: 22 },
+  profileInfo: { flex: 1 },
+  profileName: { color: '#fff', fontSize: responsiveFontSize(17), fontWeight: '800' },
+  profileEmail: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(12), marginTop: 2, fontWeight: '500' },
+  rolePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  rolePillText: { color: '#fff', fontSize: responsiveFontSize(10), fontWeight: '800', letterSpacing: 0.5 },
+  scroll: { flex: 1 },
+  groupLabel: {
+    fontSize: responsiveFontSize(11),
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  group: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  budgetInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 10,
+  },
+  budgetType: {
+    width: 70,
+    fontSize: responsiveFontSize(13),
+    fontWeight: '600',
+    color: COLORS.textMed,
+  },
+  budgetInput: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: responsiveFontSize(13),
+    color: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  saveBudgetBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  saveBudgetBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(12) },
+  logoutBtn: {
+    margin: 16,
+    marginTop: 24,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 14,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  logoutIcon: { fontSize: 20 },
+  logoutText: { fontSize: responsiveFontSize(15), fontWeight: '700', color: '#DC2626' },
 });

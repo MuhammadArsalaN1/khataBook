@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import { useStore } from '../store/useStore';
 import { COLORS } from '../constants';
 
@@ -22,13 +22,13 @@ const Stack = createNativeStackNavigator();
 
 function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: 22 }}>{icon}</Text>
+    <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 2 }}>
+      <Text style={{ fontSize: 21 }}>{icon}</Text>
       <Text
         style={{
           fontSize: 10,
-          color: focused ? COLORS.primary : COLORS.textLight,
-          fontWeight: focused ? '700' : '600',
+          color: focused ? COLORS.primary : '#94A3B8',
+          fontWeight: focused ? '700' : '500',
           marginTop: 3,
         }}
       >
@@ -46,14 +46,17 @@ function MainTabs() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 68,
-          paddingBottom: 10,
+          height: 72,
+          paddingBottom: 8,
           paddingTop: 8,
-          backgroundColor: COLORS.white,
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: COLORS.border,
-          elevation: 0,
-          shadowOpacity: 0,
+          borderTopColor: '#E2E8F0',
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -2 },
         },
       }}
     >
@@ -65,23 +68,18 @@ function MainTabs() {
       <Tab.Screen
         name="Expenses"
         component={ExpensesScreenPremium}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💰" label="Expenses" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💸" label="Expense" focused={focused} /> }}
       />
       <Tab.Screen
         name="Analytics"
         component={AnalyticsScreen}
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📊" label="Analytics" focused={focused} /> }}
       />
-      <Tab.Screen
-        name="Reports"
-        component={ReportsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📋" label="Reports" focused={focused} /> }}
-      />
       {currentUser?.role === 'admin' && (
         <Tab.Screen
           name="Activity"
           component={ActivityScreen}
-          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📝" label="Activity" focused={focused} /> }}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📋" label="More" focused={focused} /> }}
         />
       )}
       <Tab.Screen
@@ -100,6 +98,7 @@ function AppStack() {
       <Stack.Screen name="AddExpense" component={AddExpenseScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Earnings" component={EarningsScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ presentation: 'card' }} />
+      <Stack.Screen name="Reports" component={ReportsScreen} options={{ presentation: 'card' }} />
     </Stack.Navigator>
   );
 }
@@ -109,12 +108,8 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary }}>
-        <Text style={{ fontSize: 48, marginBottom: 20 }}>📒</Text>
-        <ActivityIndicator size="large" color={COLORS.white} />
-        <Text style={{ color: COLORS.white, marginTop: 12, fontWeight: '600' }}>
-          {authLoading ? 'Khata Book' : 'Syncing data...'}
-        </Text>
+      <View style={styles.loader}>
+        <LinearLoadingScreen authLoading={authLoading} />
       </View>
     );
   }
@@ -125,3 +120,35 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+function LinearLoadingScreen({ authLoading }: { authLoading: boolean }) {
+  return (
+    <View style={styles.loaderInner}>
+      <View style={styles.loaderIconBg}>
+        <Text style={{ fontSize: 40 }}>📒</Text>
+      </View>
+      <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 24 }} />
+      <Text style={styles.loaderText}>
+        {authLoading ? 'Khata Book' : 'Syncing data...'}
+      </Text>
+      <Text style={styles.loaderSub}>Your personal finance tracker</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  loader: { flex: 1, backgroundColor: '#F8FAFC' },
+  loaderInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loaderIconBg: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    backgroundColor: COLORS.primaryLight + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.primaryLight + '40',
+  },
+  loaderText: { color: COLORS.text, marginTop: 16, fontWeight: '700', fontSize: 18 },
+  loaderSub: { color: COLORS.textLight, marginTop: 4, fontSize: 13, fontWeight: '500' },
+});
