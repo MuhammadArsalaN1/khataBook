@@ -12,11 +12,11 @@ export const CATEGORIES: Record<ExpenseType, string[]> = {
 };
 
 export const COLORS = {
-  // Brand
-  primary: '#4F46E5',
-  primaryLight: '#818CF8',
-  primaryDark: '#3730A3',
-  secondary: '#7C3AED',
+  // Brand - Modern & Professional
+  primary: '#6366F1',
+  primaryLight: '#A5B4FC',
+  primaryDark: '#4F46E5',
+  secondary: '#8B5CF6',
   // Semantic
   success: '#10B981',
   successLight: '#D1FAE5',
@@ -24,32 +24,42 @@ export const COLORS = {
   warningLight: '#FEF3C7',
   danger: '#EF4444',
   dangerLight: '#FEE2E2',
-  // Types
+  // Types - Professional gradients
   personal: '#3B82F6',
   personalLight: '#DBEAFE',
+  personalBg: '#F0F9FF',
   office: '#8B5CF6',
   officeLight: '#EDE9FE',
+  officeBg: '#FAF5FF',
   farm: '#10B981',
   farmLight: '#D1FAE5',
-  // UI
-  background: '#F8FAFF',
+  farmBg: '#F0FDF4',
+  // UI - Clean & Modern
+  background: '#FAFBFC',
   card: '#FFFFFF',
+  cardSecondary: '#F8FAFC',
   border: '#E2E8F0',
   divider: '#F1F5F9',
-  // Text
-  text: '#0F172A',
-  textMed: '#475569',
-  textLight: '#94A3B8',
+  // Text - Dark & Readable
+  text: '#1F2937',
+  textMed: '#4B5563',
+  textLight: '#6B7280',
+  textAlt: '#9CA3AF',
   // Misc
   white: '#FFFFFF',
-  dark: '#0F172A',
-  overlay: 'rgba(15,23,42,0.6)',
-  // Glass-morphism
-  glassLight: 'rgba(255,255,255,0.15)',
-  glassMedium: 'rgba(255,255,255,0.25)',
-  glassDark: 'rgba(15,23,42,0.1)',
-  // Chart palette
-  chart: ['#4F46E5','#7C3AED','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899','#14B8A6'],
+  dark: '#111827',
+  overlay: 'rgba(17,24,39,0.4)',
+  overlayLight: 'rgba(17,24,39,0.2)',
+  // Glass-morphism - Refined
+  glassLight: 'rgba(255,255,255,0.12)',
+  glassMedium: 'rgba(255,255,255,0.2)',
+  glassDark: 'rgba(17,24,39,0.08)',
+  // Chart palette - Professional
+  chart: ['#6366F1','#8B5CF6','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899','#14B8A6'],
+  // Modern gradient colors
+  accent1: '#06B6D4',
+  accent2: '#EC4899',
+  accent3: '#F97316',
 };
 
 export const TYPE_LABELS: Record<ExpenseType, string> = {
