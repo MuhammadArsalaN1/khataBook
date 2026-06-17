@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  TextInput, Alert, SafeAreaView as RNSafeAreaView,
+  Alert, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -9,13 +9,19 @@ import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, TYPE_LABELS, TYPE_COLORS, TYPE_LIGHT, TYPE_ICONS } from '../../constants';
 import { ExpenseType } from '../../types';
+import { getActiveFiscalMonth } from '../../utils/fiscalMonth';
+import { formatMoney } from '../../utils/currency';
+import { responsiveFontSize } from '../../utils/responsive';
+import NumberPad from '../../components/common/NumberPad';
 
 export default function EarningsScreen() {
   const { incomes, expenses, saveIncome } = useStore();
   const navigation = useNavigation<any>();
   const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
+  const fiscal = getActiveFiscalMonth(now);
+  const { month, year } = fiscal;
+  const [padType, setPadType] = useState<ExpenseType | null>(null);
+  const [padValue, setPadValue] = useState('0');
 
   const [inputs, setInputs] = useState<Record<ExpenseType, string>>({
     personal: incomes.find(i => i.type === 'personal' && i.month === month && i.year === year)?.amount.toString() ?? '',
@@ -40,14 +46,18 @@ export default function EarningsScreen() {
   const totalExpenses = Object.values(expenses_byType).reduce((s, v) => s + v, 0);
   const balance = totalIncome - totalExpenses;
 
-  const handleSaveIncome = async (type: ExpenseType) => {
-    const val = Number(inputs[type]);
-    if (isNaN(val) || val < 0) {
-      Alert.alert('Invalid', 'Enter a valid income amount.');
-      return;
-    }
-    await saveIncome(type, val, month, year);
-    Alert.alert('Saved', `${TYPE_LABELS[type]} income set to Rs. ${val.toLocaleString()}`);
+  const openPad = (type: ExpenseType) => {
+    setPadValue(inputs[type] || '0');
+    setPadType(type);
+  };
+
+  const handleSaveIncome = async () => {
+    if (!padType) return;
+    const val = Number(padValue);
+    if (isNaN(val) || val < 0) { Alert.alert('Invalid', 'Enter a valid income amount.'); return; }
+    setInputs(prev => ({ ...prev, [padType]: padValue }));
+    await saveIncome(padType, val, month, year);
+    setPadType(null);
   };
 
   return (
@@ -61,7 +71,7 @@ export default function EarningsScreen() {
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.monthLabel}>{format(now, 'MMMM yyyy')}</Text>
+        <Text style={styles.monthLabel}>{fiscal.label}</Text>
 
         {/* Summary Cards */}
         <View style={styles.summaryRow}>
@@ -111,20 +121,11 @@ export default function EarningsScreen() {
 
               <View style={styles.typeCardRow}>
                 <View style={styles.incomeInput}>
-                  <Text style={styles.rowLabel}>Income</Text>
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      style={styles.input}
-                      value={inputs[type]}
-                      onChangeText={val => setInputs(prev => ({ ...prev, [type]: val }))}
-                      keyboardType="numeric"
-                      placeholder="0"
-                      placeholderTextColor={COLORS.textLight}
-                    />
-                    <TouchableOpacity style={styles.saveSmallBtn} onPress={() => handleSaveIncome(type)}>
-                      <Text style={styles.saveSmallBtnText}>Save</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text style={styles.rowLabel}>Income (tap to edit)</Text>
+                  <TouchableOpacity style={styles.incomeTap} onPress={() => openPad(type)} activeOpacity={0.7}>
+                    <Text style={styles.incomeTapText}>{formatMoney(income)}</Text>
+                    <Text style={styles.incomeTapIcon}>🔢</Text>
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.expenseBox}>
@@ -155,6 +156,25 @@ export default function EarningsScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Numpad modal */}
+      <Modal visible={!!padType} transparent animationType="slide" onRequestClose={() => setPadType(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            {padType && (
+              <>
+                <View style={styles.modalHeaderRow}>
+                  <Text style={styles.modalTitle}>{TYPE_ICONS[padType]} {TYPE_LABELS[padType]} Income</Text>
+                  <Text style={styles.modalSub}>{fiscal.label}</Text>
+                </View>
+                <View style={styles.amountPreview}><Text style={styles.amountPreviewText}>Rs. {padValue}</Text></View>
+                <NumberPad value={padValue} onChange={setPadValue} onDone={handleSaveIncome} onClear={() => setPadValue('0')} />
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -183,14 +203,21 @@ const styles = StyleSheet.create({
   typeCardRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   incomeInput: { flex: 1 },
   rowLabel: { fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 },
-  inputRow: { flexDirection: 'row', gap: 6 },
-  input: { flex: 1, backgroundColor: COLORS.white, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, padding: 10, fontSize: 14, color: COLORS.text },
-  saveSmallBtn: { backgroundColor: COLORS.primary, borderRadius: 8, paddingHorizontal: 12, justifyContent: 'center' },
-  saveSmallBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
+  incomeTap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.white, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 12, paddingVertical: 11 },
+  incomeTapText: { fontSize: responsiveFontSize(15), fontWeight: '800', color: COLORS.text },
+  incomeTapIcon: { fontSize: 16 },
   expenseBox: { width: 90 },
   expenseAmount: { fontSize: 14, fontWeight: '800', color: COLORS.danger, marginTop: 4 },
   progressContainer: { marginTop: 8 },
   progressBar: { height: 6, backgroundColor: COLORS.border, borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3 },
   progressText: { fontSize: 10, color: COLORS.textLight, marginTop: 4 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 10 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginBottom: 8 },
+  modalHeaderRow: { alignItems: 'center', paddingBottom: 4 },
+  modalTitle: { fontSize: responsiveFontSize(16), fontWeight: '800', color: COLORS.text },
+  modalSub: { fontSize: responsiveFontSize(12), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
+  amountPreview: { alignItems: 'center', paddingVertical: 10 },
+  amountPreviewText: { fontSize: responsiveFontSize(34), fontWeight: '800', color: COLORS.primary },
 });
