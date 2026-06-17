@@ -1,4 +1,4 @@
-import { User, ExpenseType } from '../types';
+import { User, ExpenseType, Currency, PaymentMethod } from '../types';
 
 export const USERS: User[] = [
   { id: 'arsalan', name: 'Arsalan', email: 'arsalan@itcorpinc.com', role: 'admin' },
@@ -97,13 +97,62 @@ export const PAYMENT_METHODS = {
   payoneer: { label: 'Payoneer', icon: '💳', color: '#07A41E' },
 };
 
-export const WALLETS = [
-  { id: 'cash', name: 'Cash', icon: '💵', color: PAYMENT_METHODS.cash.color },
-  { id: 'bank', name: 'Bank', icon: '🏦', color: PAYMENT_METHODS.bank.color },
-  { id: 'jazzcash', name: 'JazzCash', icon: '📞', color: PAYMENT_METHODS.jazzcash.color },
-  { id: 'paypal', name: 'PayPal', icon: '🌐', color: PAYMENT_METHODS.paypal.color },
-  { id: 'payoneer', name: 'Payoneer', icon: '💳', color: PAYMENT_METHODS.payoneer.color },
+// Wallet providers with currency support + premium gradient styling.
+// PKR wallets are single-currency; PayPal/Payoneer can hold USD/EUR/GBP.
+export interface WalletMeta {
+  id: PaymentMethod;
+  name: string;
+  icon: string;            // emoji fallback
+  lottie: string;          // AnimatedIcon name (see LOTTIE_ICONS)
+  color: string;
+  gradient: string[];
+  currencies: Currency[];  // currencies this wallet can hold
+}
+
+export const WALLETS: WalletMeta[] = [
+  { id: 'cash',     name: 'Cash',     icon: '💵', lottie: 'cash',     color: '#10B981', gradient: ['#34D399', '#059669'], currencies: ['PKR'] },
+  { id: 'bank',     name: 'Bank',     icon: '🏦', lottie: 'bank',     color: '#3B82F6', gradient: ['#60A5FA', '#2563EB'], currencies: ['PKR'] },
+  { id: 'jazzcash', name: 'JazzCash', icon: '📲', lottie: 'mobile',   color: '#E52C2C', gradient: ['#F87171', '#DC2626'], currencies: ['PKR'] },
+  { id: 'paypal',   name: 'PayPal',   icon: '🌐', lottie: 'paypal',   color: '#0070BA', gradient: ['#3B82F6', '#1E3A8A'], currencies: ['USD', 'EUR', 'GBP'] },
+  { id: 'payoneer', name: 'Payoneer', icon: '💳', lottie: 'card',     color: '#FF4800', gradient: ['#FB923C', '#EA580C'], currencies: ['USD', 'EUR', 'GBP'] },
 ];
+
+export const CURRENCIES: Record<Currency, { symbol: string; label: string; flag: string }> = {
+  PKR: { symbol: 'Rs.', label: 'Pakistani Rupee', flag: '🇵🇰' },
+  USD: { symbol: '$',   label: 'US Dollar',        flag: '🇺🇸' },
+  EUR: { symbol: '€',   label: 'Euro',             flag: '🇪🇺' },
+  GBP: { symbol: '£',   label: 'British Pound',    flag: '🇬🇧' },
+};
+
+// Default conversion rates to PKR (editable in Settings → stored in Firebase settings).
+export const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
+  PKR: 1,
+  USD: 278,
+  EUR: 300,
+  GBP: 352,
+};
+
+// Dashboard fiscal-month config: month runs 1st–end, but the UI "rolls over"
+// to the next fiscal month on this day so late entries still land in the prior month.
+export const FISCAL_RESET_DAY = 3;
+
+// Lottie animated-icon registry. Files live in assets/lottie/<name>.json.
+// AnimatedIcon falls back to the emoji if a file is missing, so the app
+// works immediately even before the .json files are added.
+export const LOTTIE_ICONS: Record<string, { source: any | null; emoji: string }> = {
+  cash:      { source: null, emoji: '💵' },
+  bank:      { source: null, emoji: '🏦' },
+  mobile:    { source: null, emoji: '📲' },
+  paypal:    { source: null, emoji: '🌐' },
+  card:      { source: null, emoji: '💳' },
+  income:    { source: null, emoji: '💰' },
+  expense:   { source: null, emoji: '🧾' },
+  wallet:    { source: null, emoji: '👛' },
+  analytics: { source: null, emoji: '📊' },
+  bell:      { source: null, emoji: '🔔' },
+  goal:      { source: null, emoji: '🎯' },
+  transfer:  { source: null, emoji: '🔁' },
+};
 
 export const STORAGE_KEYS = {
   EXPENSES: 'khata_expenses',

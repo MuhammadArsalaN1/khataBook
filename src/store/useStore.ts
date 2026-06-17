@@ -9,8 +9,9 @@ import {
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
   addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, upsertSavingsGoalDoc, deleteSavingsGoalDoc, upsertTemplateDoc, deleteTemplateDoc, saveSettings, getSettings,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate } from '../types';
-import { USERS } from '../constants';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency } from '../types';
+import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
+import { ExchangeRates } from '../utils/currency';
 
 // ── Global state ─────────────────────────────────────────────────────────────
 interface AppState {
@@ -24,6 +25,7 @@ interface AppState {
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
+  exchangeRates: ExchangeRates;
   authLoading: boolean;
   dataLoading: boolean;
   authError: string | null;
@@ -40,6 +42,7 @@ let state: AppState = {
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
+  exchangeRates: { ...DEFAULT_EXCHANGE_RATES },
   authLoading: true,
   dataLoading: true,
   authError: null,
@@ -88,6 +91,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       firebaseUser: fbUser,
       currentUser: appUser,
       approvalMode: settings.approvalMode === true,
+      exchangeRates: { ...DEFAULT_EXCHANGE_RATES, ...(settings.exchangeRates as Partial<ExchangeRates> ?? {}) },
       authLoading: false,
       dataLoading: true,
       authError: null,
@@ -223,9 +227,14 @@ export function useStore() {
     await saveSettings({ approvalMode: next });
   }, []);
 
+  const saveExchangeRates = useCallback(async (rates: ExchangeRates) => {
+    setState({ exchangeRates: rates });
+    await saveSettings({ exchangeRates: rates });
+  }, []);
+
   // ── Wallets ───────────────────────────────────────────────────────────────
   const saveWallet = useCallback(async (wallet: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const id = `wlt_${wallet.userId}_${wallet.provider}_${wallet.month}_${wallet.year}`;
+    const id = `wlt_${wallet.userId}_${wallet.provider}_${wallet.currency}_${wallet.month}_${wallet.year}`;
     const now = new Date().toISOString();
     const existing = state.wallets.find(w => w.id === id);
     const walletDoc: Wallet = {
@@ -276,6 +285,7 @@ export function useStore() {
     saveBudget,
     saveIncome,
     toggleApprovalMode,
+    saveExchangeRates,
     saveWallet,
     deleteWallet,
     saveSavingsGoal,

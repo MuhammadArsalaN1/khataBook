@@ -4,6 +4,8 @@ export type ExpenseType = 'personal' | 'office' | 'farm';
 
 export type PaymentMethod = 'cash' | 'bank' | 'digital' | 'jazzcash' | 'paypal' | 'payoneer';
 
+export type Currency = 'PKR' | 'USD' | 'EUR' | 'GBP';
+
 export type ExpenseStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 
 export type ActionType = 'add' | 'edit' | 'delete' | 'approve' | 'reject';
@@ -81,6 +83,7 @@ export interface Wallet {
   userId: string;
   provider: PaymentMethod;
   balance: number;
+  currency: Currency;
   month: number;
   year: number;
   createdAt: string;
