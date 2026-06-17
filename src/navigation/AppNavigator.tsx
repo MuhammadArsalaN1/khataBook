@@ -7,7 +7,7 @@ import { useStore } from '../store/useStore';
 import { COLORS } from '../constants';
 
 import LoginScreen from '../screens/Auth/LoginScreen';
-import DashboardScreenNew from '../screens/Dashboard/DashboardScreenNew';
+import DashboardScreenPremium from '../screens/Dashboard/DashboardScreenPremium';
 import ExpensesScreen from '../screens/Expenses/ExpensesScreen';
 import AddExpenseScreen from '../screens/Expenses/AddExpenseScreen';
 import AnalyticsScreen from '../screens/Analytics/AnalyticsScreen';
@@ -59,7 +59,7 @@ function MainTabs() {
     >
       <Tab.Screen
         name="Dashboard"
-        component={DashboardScreenNew}
+        component={DashboardScreenPremium}
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} /> }}
       />
       <Tab.Screen
