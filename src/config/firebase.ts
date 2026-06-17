@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { initializeAuth, inMemoryPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC3uvRJgY1guevDIazDvBnEHCowV70yC1I',
@@ -13,10 +13,12 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// inMemoryPersistence keeps the session alive for the app lifetime.
-// On React Native, the auth token is re-validated each cold start via onAuthStateChanged.
 export const auth = initializeAuth(app, {
   persistence: inMemoryPersistence,
 });
 
-export const db = getFirestore(app);
+// experimentalForceLongPolling is required for React Native / Expo Go
+// because the default gRPC transport isn't available outside a native build.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
