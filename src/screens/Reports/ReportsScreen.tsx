@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, SafeAreaView,
+  View, Text, ScrollView, StyleSheet, 
   TouchableOpacity, Alert, Share,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, subQuarters } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, TYPE_LABELS } from '../../constants';

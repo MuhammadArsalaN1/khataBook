@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  SafeAreaView, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
+   ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { USERS, COLORS } from '../../constants';
 import { useStore } from '../../store/useStore';
 import { User } from '../../types';

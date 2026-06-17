@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, SafeAreaView, TextInput,
+  View, Text, FlatList, StyleSheet,  TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, USERS } from '../../constants';

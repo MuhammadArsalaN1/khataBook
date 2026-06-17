@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, SafeAreaView,
+  View, Text, ScrollView, StyleSheet, 
   TouchableOpacity, Switch, TextInput, Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
 import { COLORS, TYPE_LABELS, USERS } from '../../constants';
