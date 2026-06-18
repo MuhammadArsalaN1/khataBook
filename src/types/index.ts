@@ -82,6 +82,7 @@ export interface Wallet {
   id: string;
   userId: string;
   provider: PaymentMethod;
+  agency: string;       // sub-account, e.g. "Hybrid", "ArsalanCo1", "Main"
   balance: number;
   currency: Currency;
   month: number;

@@ -14,6 +14,7 @@ import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
 import { getActiveFiscalMonth, getResetCountdown, Countdown } from '../../utils/fiscalMonth';
 import AnimatedIcon from '../../components/common/AnimatedIcon';
+import BrandMark from '../../components/common/BrandMark';
 
 const W = Dimensions.get('window').width;
 const CARD_W = (W - 44) / 2;
@@ -220,18 +221,22 @@ export default function DashboardScreenPremium() {
                     <View style={styles.walletMiniIcon}>
                       <AnimatedIcon name={meta.lottie} size={28} emojiSize={20} />
                     </View>
-                    <Text style={styles.walletMiniName}>{meta.name}</Text>
+                    {meta.brand === 'cash' || meta.brand === 'bank'
+                      ? <Text style={styles.walletMiniName}>{meta.name}</Text>
+                      : <BrandMark brand={meta.brand} size={15} />}
                   </View>
                   <View style={styles.walletMiniInner}>
                     {meta.currencies.length === 1 ? (
-                      <Text style={styles.walletMiniBal}>{formatMoney(docs[0]?.balance ?? 0, meta.currencies[0])}</Text>
+                      <Text style={styles.walletMiniBal}>
+                        {formatMoney(docs.reduce((s, x) => s + x.balance, 0), meta.currencies[0])}
+                      </Text>
                     ) : (
                       <>
                         {meta.currencies.map(c => {
-                          const d = docs.find(x => x.currency === c);
+                          const sum = docs.filter(x => x.currency === c).reduce((s, x) => s + x.balance, 0);
                           return (
                             <Text key={c} style={styles.walletMiniMulti}>
-                              {CURRENCIES[c].flag} {formatMoney(d?.balance ?? 0, c)}
+                              {CURRENCIES[c].flag} {formatMoney(sum, c)}
                             </Text>
                           );
                         })}

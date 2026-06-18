@@ -116,22 +116,27 @@ export const PAYMENT_METHODS = {
 
 // Wallet providers with currency support + premium gradient styling.
 // PKR wallets are single-currency; PayPal/Payoneer can hold USD/EUR/GBP.
+export type WalletBrand = 'jazzcash' | 'paypal' | 'payoneer' | 'cash' | 'bank';
+
 export interface WalletMeta {
   id: PaymentMethod;
   name: string;
   icon: string;            // emoji fallback
   lottie: string;          // AnimatedIcon name (see LOTTIE_ICONS)
+  brand: WalletBrand;      // drives the branded card styling
   color: string;
   gradient: string[];
   currencies: Currency[];  // currencies this wallet can hold
+  agencies: string[];      // sub-accounts under this provider
 }
 
+// Brand-accurate gradients + wordmarks for the payment cards.
 export const WALLETS: WalletMeta[] = [
-  { id: 'cash',     name: 'Cash',     icon: '💵', lottie: 'cash',     color: '#10B981', gradient: ['#34D399', '#059669'], currencies: ['PKR'] },
-  { id: 'bank',     name: 'Bank',     icon: '🏦', lottie: 'bank',     color: '#3B82F6', gradient: ['#60A5FA', '#2563EB'], currencies: ['PKR'] },
-  { id: 'jazzcash', name: 'JazzCash', icon: '📲', lottie: 'mobile',   color: '#E52C2C', gradient: ['#F87171', '#DC2626'], currencies: ['PKR'] },
-  { id: 'paypal',   name: 'PayPal',   icon: '🌐', lottie: 'paypal',   color: '#0070BA', gradient: ['#3B82F6', '#1E3A8A'], currencies: ['USD', 'EUR', 'GBP'] },
-  { id: 'payoneer', name: 'Payoneer', icon: '💳', lottie: 'card',     color: '#FF4800', gradient: ['#FB923C', '#EA580C'], currencies: ['USD', 'EUR', 'GBP'] },
+  { id: 'cash',     name: 'Cash',     icon: '💵', lottie: 'cash',   brand: 'cash',     color: '#059669', gradient: ['#34D399', '#059669'], currencies: ['PKR'], agencies: ['Cash'] },
+  { id: 'bank',     name: 'Bank',     icon: '🏦', lottie: 'bank',   brand: 'bank',     color: '#2563EB', gradient: ['#60A5FA', '#1E40AF'], currencies: ['PKR'], agencies: ['Bank'] },
+  { id: 'jazzcash', name: 'JazzCash', icon: '📲', lottie: 'mobile', brand: 'jazzcash', color: '#ED1C24', gradient: ['#F0353C', '#B3151B'], currencies: ['PKR'], agencies: ['Main'] },
+  { id: 'paypal',   name: 'PayPal',   icon: '🅿️', lottie: 'paypal', brand: 'paypal',   color: '#0070BA', gradient: ['#009CDE', '#003087'], currencies: ['GBP', 'USD', 'EUR'], agencies: ['Hybrid'] },
+  { id: 'payoneer', name: 'Payoneer', icon: '💳', lottie: 'card',   brand: 'payoneer', color: '#FF4800', gradient: ['#FF7A00', '#E03E00'], currencies: ['USD', 'EUR', 'GBP'], agencies: ['Hybrid', 'ArsalanCo1', 'AlwaysDigital'] },
 ];
 
 export const CURRENCIES: Record<Currency, { symbol: string; label: string; flag: string }> = {

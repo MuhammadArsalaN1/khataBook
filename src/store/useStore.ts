@@ -234,7 +234,7 @@ export function useStore() {
 
   // ── Wallets ───────────────────────────────────────────────────────────────
   const saveWallet = useCallback(async (wallet: Omit<Wallet, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const id = `wlt_${wallet.userId}_${wallet.provider}_${wallet.currency}_${wallet.month}_${wallet.year}`;
+    const id = `wlt_${wallet.userId}_${wallet.provider}_${wallet.agency}_${wallet.currency}_${wallet.month}_${wallet.year}`;
     const now = new Date().toISOString();
     const existing = state.wallets.find(w => w.id === id);
     const walletDoc: Wallet = {
