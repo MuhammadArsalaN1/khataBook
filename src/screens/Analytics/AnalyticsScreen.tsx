@@ -118,7 +118,7 @@ export default function AnalyticsScreen() {
   const year = now.getFullYear();
 
   const totalIncome = useMemo(
-    () => incomes.filter((i: any) => i.month === month && i.year === year).reduce((s: number, i: any) => s + i.amount, 0),
+    () => incomes.filter((i: any) => i.month === month && i.year === year && i.status !== 'pending' && i.status !== 'rejected').reduce((s: number, i: any) => s + i.amount, 0),
     [incomes, month, year]
   );
   const totalExpenses = useMemo(

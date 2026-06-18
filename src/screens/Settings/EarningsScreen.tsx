@@ -37,9 +37,9 @@ export default function EarningsScreen() {
   const expenses_byType = useMemo(() => {
     const monthStr = format(now, 'yyyy-MM');
     return {
-      personal: expenses.filter(e => e.type === 'personal' && e.date.startsWith(monthStr) && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0),
-      office: expenses.filter(e => e.type === 'office' && e.date.startsWith(monthStr) && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0),
-      farm: expenses.filter(e => e.type === 'farm' && e.date.startsWith(monthStr) && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0),
+      personal: expenses.filter(e => e.type === 'personal' && e.date.startsWith(monthStr) && e.status !== 'rejected' && e.status !== 'pending').reduce((s, e) => s + e.amount, 0),
+      office: expenses.filter(e => e.type === 'office' && e.date.startsWith(monthStr) && e.status !== 'rejected' && e.status !== 'pending').reduce((s, e) => s + e.amount, 0),
+      farm: expenses.filter(e => e.type === 'farm' && e.date.startsWith(monthStr) && e.status !== 'rejected' && e.status !== 'pending').reduce((s, e) => s + e.amount, 0),
     };
   }, [expenses]);
 

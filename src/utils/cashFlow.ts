@@ -32,7 +32,7 @@ export function projectCashFlow(
   // Calculate average daily expense from historical data
   const thisMonthExpenses = currentExpenses.filter(
     e => isWithinInterval(new Date(e.date), { start: monthStart, end: monthEnd }) &&
-    e.status !== 'rejected'
+    e.status !== 'rejected' && e.status !== 'pending'
   );
 
   const totalExpense = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -107,7 +107,7 @@ export function calculateRunway(expenses: Expense[], wallets: any[]): number {
     const expDate = new Date(e.date);
     const today = new Date();
     const diff = (today.getTime() - expDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diff <= 30 && e.status !== 'rejected';
+    return diff <= 30 && e.status !== 'rejected' && e.status !== 'pending';
   });
 
   const avgDailyExpense = last30Days.length > 0

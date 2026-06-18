@@ -67,6 +67,8 @@ export interface Income {
   month: number;
   year: number;
   createdAt: string;
+  status?: ExpenseStatus;   // pending until admin approves (approval mode)
+  enteredBy?: string;       // user id who set it
 }
 
 export interface MonthlyComparison {

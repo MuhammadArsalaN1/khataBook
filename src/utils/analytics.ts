@@ -27,7 +27,7 @@ export function getDashboardStats(expenses: Expense[]) {
   const monthStart = startOfMonth(now);
   const yearStart = startOfYear(now);
 
-  const approved = expenses.filter(e => e.status !== 'rejected');
+  const approved = expenses.filter(e => e.status !== 'rejected' && e.status !== 'pending');
 
   const todayExp = approved.filter(e => e.date.startsWith(todayStr));
   const weekExp = filterByDateRange(approved, weekStart, now);
@@ -58,7 +58,7 @@ export function getDashboardStats(expenses: Expense[]) {
 
 export function getMonthlyComparisons(expenses: Expense[], count: number): MonthlyComparison[] {
   const now = new Date();
-  const approved = expenses.filter(e => e.status !== 'rejected');
+  const approved = expenses.filter(e => e.status !== 'rejected' && e.status !== 'pending');
   const result: MonthlyComparison[] = [];
 
   for (let i = count - 1; i >= 0; i--) {
@@ -95,7 +95,7 @@ export function getCategoryBreakdown(expenses: Expense[], type?: ExpenseType) {
 
 export function getUserContribution(expenses: Expense[]) {
   const map: Record<string, number> = {};
-  expenses.filter(e => e.status !== 'rejected').forEach(e => {
+  expenses.filter(e => e.status !== 'rejected' && e.status !== 'pending').forEach(e => {
     map[e.enteredBy] = (map[e.enteredBy] ?? 0) + e.amount;
   });
   return map;
@@ -104,7 +104,7 @@ export function getUserContribution(expenses: Expense[]) {
 export function getSmartInsights(expenses: Expense[]) {
   const now = new Date();
   const monthStart = startOfMonth(now);
-  const monthExp = filterByDateRange(expenses.filter(e => e.status !== 'rejected'), monthStart, now);
+  const monthExp = filterByDateRange(expenses.filter(e => e.status !== 'rejected' && e.status !== 'pending'), monthStart, now);
   const cats = getCategoryBreakdown(monthExp);
   const comparisons = getMonthlyComparisons(expenses, 6);
 

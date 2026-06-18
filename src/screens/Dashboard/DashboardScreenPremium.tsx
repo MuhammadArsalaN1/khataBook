@@ -31,7 +31,7 @@ function useCountdown(): Countdown {
 }
 
 export default function DashboardScreenPremium() {
-  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets } = useStore();
+  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets, approveExpense, approveIncome } = useStore();
   const navigation = useNavigation<any>();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -44,14 +44,14 @@ export default function DashboardScreenPremium() {
   const fiscalExpenses = useMemo(
     () => expenses.filter(e => {
       const d = new Date(e.date);
-      return d.getMonth() + 1 === month && d.getFullYear() === year && e.status !== 'rejected';
+      return d.getMonth() + 1 === month && d.getFullYear() === year && e.status !== 'rejected' && e.status !== 'pending';
     }),
     [expenses, month, year]
   );
 
   const totalSpent = useMemo(() => fiscalExpenses.reduce((s, e) => s + e.amount, 0), [fiscalExpenses]);
   const totalIncome = useMemo(
-    () => incomes.filter((i: any) => i.month === month && i.year === year).reduce((s: number, i: any) => s + i.amount, 0),
+    () => incomes.filter((i: any) => i.month === month && i.year === year && i.status !== 'pending' && i.status !== 'rejected').reduce((s: number, i: any) => s + i.amount, 0),
     [incomes, month, year]
   );
   const balance = totalIncome - totalSpent;
@@ -97,8 +97,8 @@ export default function DashboardScreenPremium() {
     for (let i = 5; i >= 0; i--) {
       const d = subMonths(now, i);
       const m = d.getMonth() + 1, y = d.getFullYear();
-      const exp = expenses.filter(e => { const dd = new Date(e.date); return dd.getMonth() + 1 === m && dd.getFullYear() === y && e.status !== 'rejected'; }).reduce((s, e) => s + e.amount, 0);
-      const inc = incomes.filter((x: any) => x.month === m && x.year === y).reduce((s: number, x: any) => s + x.amount, 0);
+      const exp = expenses.filter(e => { const dd = new Date(e.date); return dd.getMonth() + 1 === m && dd.getFullYear() === y && e.status !== 'rejected' && e.status !== 'pending'; }).reduce((s, e) => s + e.amount, 0);
+      const inc = incomes.filter((x: any) => x.month === m && x.year === y && x.status !== 'pending' && x.status !== 'rejected').reduce((s: number, x: any) => s + x.amount, 0);
       const nw = wallets.filter(w => w.userId === currentUser?.id && w.month === m && w.year === y).reduce((s, w) => s + toPKR(w.balance, w.currency ?? 'PKR', exchangeRates), 0);
       arr.push({ label: format(d, 'MMM'), inc, exp, nw });
     }
@@ -137,22 +137,26 @@ export default function DashboardScreenPremium() {
     await Share.share({ message: t });
   };
 
-  // Notifications: pending approvals (admin) + latest activity
-  const pendingCount = useMemo(() => expenses.filter(e => e.status === 'pending').length, [expenses]);
+  // Pending approvals (admin only) — expenses + incomes awaiting review
+  const isAdmin = currentUser?.role === 'admin';
+  const pendingExpenses = useMemo(() => expenses.filter(e => e.status === 'pending'), [expenses]);
+  const pendingIncomes = useMemo(() => incomes.filter((i: any) => i.status === 'pending'), [incomes]);
+  const pendingCount = pendingExpenses.length + pendingIncomes.length;
+
   const notifications = useMemo(() => {
     const items: { icon: string; title: string; sub: string; ts: string }[] = [];
-    if (currentUser?.role === 'admin' && pendingCount > 0) {
-      items.push({ icon: '⏳', title: `${pendingCount} expense${pendingCount > 1 ? 's' : ''} awaiting approval`, sub: 'Tap to review in Expenses', ts: '' });
+    if (isAdmin && pendingCount > 0) {
+      items.push({ icon: '⏳', title: `${pendingCount} entr${pendingCount > 1 ? 'ies' : 'y'} awaiting your approval`, sub: 'Review them in the Approvals card below', ts: '' });
     }
     if (countdown.days <= 2) {
       items.push({ icon: '🔄', title: 'Fiscal month resets soon', sub: `Dashboard rolls over in ${countdown.days}d ${countdown.hours}h`, ts: '' });
     }
-    activityLogs.slice(0, 8).forEach(l =>
+    activityLogs.slice(0, 10).forEach(l =>
       items.push({ icon: actionEmoji(l.action), title: l.details, sub: `${l.userName} · ${format(new Date(l.timestamp), 'dd MMM, hh:mm a')}`, ts: l.timestamp })
     );
     return items;
-  }, [activityLogs, pendingCount, currentUser, countdown]);
-  const notifBadge = (currentUser?.role === 'admin' ? pendingCount : 0) + (countdown.days <= 2 ? 1 : 0);
+  }, [activityLogs, pendingCount, isAdmin, countdown]);
+  const notifBadge = (isAdmin ? pendingCount : 0) + (countdown.days <= 2 ? 1 : 0);
 
   const greeting = now.getHours() < 12 ? 'Good Morning' : now.getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
 
@@ -235,6 +239,54 @@ export default function DashboardScreenPremium() {
           </View>
           <Text style={styles.insightArrow}>›</Text>
         </TouchableOpacity>
+
+        {/* Pending Approvals (admin only) */}
+        {isAdmin && pendingCount > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>⏳ Pending Approvals</Text>
+              <View style={styles.approvalBadge}><Text style={styles.approvalBadgeText}>{pendingCount}</Text></View>
+            </View>
+            {pendingExpenses.map(e => {
+              const u = USERS.find(x => x.id === e.enteredBy);
+              return (
+                <View key={e.id} style={styles.approvalCard}>
+                  <View style={styles.approvalInfo}>
+                    <Text style={styles.approvalTitle}>{CATEGORY_EMOJI[e.category] ?? '💰'} {e.category} · {formatMoney(e.amount)}</Text>
+                    <Text style={styles.approvalSub}>Expense · {e.type} · by {u?.name ?? '—'}</Text>
+                  </View>
+                  <View style={styles.approvalActions}>
+                    <TouchableOpacity style={[styles.apBtn, styles.apReject]} onPress={() => approveExpense(e.id, 'rejected')}>
+                      <Text style={styles.apRejectText}>✕</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.apBtn, styles.apApprove]} onPress={() => approveExpense(e.id, 'approved')}>
+                      <Text style={styles.apApproveText}>✓ Approve</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+            {pendingIncomes.map((i: any) => {
+              const u = USERS.find(x => x.id === i.enteredBy);
+              return (
+                <View key={i.id} style={styles.approvalCard}>
+                  <View style={styles.approvalInfo}>
+                    <Text style={styles.approvalTitle}>🪙 {i.type} income · {formatMoney(i.amount)}</Text>
+                    <Text style={styles.approvalSub}>Income · by {u?.name ?? '—'}</Text>
+                  </View>
+                  <View style={styles.approvalActions}>
+                    <TouchableOpacity style={[styles.apBtn, styles.apReject]} onPress={() => approveIncome(i.id, 'rejected')}>
+                      <Text style={styles.apRejectText}>✕</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.apBtn, styles.apApprove]} onPress={() => approveIncome(i.id, 'approved')}>
+                      <Text style={styles.apApproveText}>✓ Approve</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Quick actions */}
         <View style={styles.section}>
@@ -716,4 +768,17 @@ const styles = StyleSheet.create({
 
   shareBtn: { marginTop: 14, marginRight: 16, backgroundColor: '#1A1A1A', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   shareBtnText: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '700' },
+
+  approvalBadge: { backgroundColor: COLORS.accent, borderRadius: 12, minWidth: 24, paddingHorizontal: 8, paddingVertical: 2, alignItems: 'center' },
+  approvalBadgeText: { color: '#1A1A1A', fontWeight: '800', fontSize: responsiveFontSize(12) },
+  approvalCard: { backgroundColor: COLORS.card, borderRadius: 14, padding: 14, marginBottom: 10, marginRight: 16, borderLeftWidth: 4, borderLeftColor: COLORS.accent, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
+  approvalInfo: { marginBottom: 10 },
+  approvalTitle: { fontSize: responsiveFontSize(14), fontWeight: '700', color: COLORS.text },
+  approvalSub: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
+  approvalActions: { flexDirection: 'row', gap: 8 },
+  apBtn: { flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center' },
+  apReject: { backgroundColor: '#F5F5F0', flex: 0, paddingHorizontal: 16 },
+  apRejectText: { color: '#1A1A1A', fontWeight: '800', fontSize: responsiveFontSize(13) },
+  apApprove: { backgroundColor: COLORS.accent },
+  apApproveText: { color: '#1A1A1A', fontWeight: '800', fontSize: responsiveFontSize(13) },
 });

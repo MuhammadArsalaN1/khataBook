@@ -217,7 +217,33 @@ export function useStore() {
   // ── Income ────────────────────────────────────────────────────────────────
   const saveIncome = useCallback(async (type: ExpenseType, amount: number, month: number, year: number) => {
     const id = `inc_${type}_${month}_${year}`;
-    await upsertIncomeDoc({ id, type, amount, month, year, createdAt: new Date().toISOString() });
+    const isUser = state.currentUser?.role !== 'admin';
+    const status = state.approvalMode && isUser ? 'pending' : 'approved';
+    await upsertIncomeDoc({
+      id, type, amount, month, year,
+      status, enteredBy: state.currentUser?.id ?? '',
+      createdAt: new Date().toISOString(),
+    });
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'add',
+      expenseId: id,
+      details: `Set ${type} income: Rs. ${amount.toLocaleString()}${status === 'pending' ? ' (pending approval)' : ''}`,
+    });
+  }, []);
+
+  const approveIncome = useCallback(async (id: string, status: 'approved' | 'rejected') => {
+    const inc = state.incomes.find((i: any) => i.id === id);
+    if (!inc) return;
+    await upsertIncomeDoc({ ...inc, status });
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: status === 'approved' ? 'approve' : 'reject',
+      expenseId: id,
+      details: `Income ${status}: ${inc.type} Rs. ${inc.amount?.toLocaleString?.() ?? inc.amount}`,
+    });
   }, []);
 
   // ── Settings ──────────────────────────────────────────────────────────────
@@ -284,6 +310,7 @@ export function useStore() {
     approveExpense,
     saveBudget,
     saveIncome,
+    approveIncome,
     toggleApprovalMode,
     saveExchangeRates,
     saveWallet,

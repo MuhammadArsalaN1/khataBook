@@ -49,13 +49,13 @@ export function getCategoryTrends(expenses: Expense[], months: number = 2): Cate
     const thisMonthExpenses = expenses.filter(
       e => e.category === category &&
       isWithinInterval(new Date(e.date), { start: thisMonthStart, end: thisMonthEnd }) &&
-      e.status !== 'rejected'
+      e.status !== 'rejected' && e.status !== 'pending'
     );
 
     const lastMonthExpenses = expenses.filter(
       e => e.category === category &&
       isWithinInterval(new Date(e.date), { start: lastMonthStart, end: lastMonthEnd }) &&
-      e.status !== 'rejected'
+      e.status !== 'rejected' && e.status !== 'pending'
     );
 
     const thisMonthTotal = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -139,7 +139,7 @@ export function generateInsightReport(expenses: Expense[]): InsightReport {
 
   const thisMonthExpenses = expenses.filter(
     e => isWithinInterval(new Date(e.date), { start: thisMonthStart, end: thisMonthEnd }) &&
-    e.status !== 'rejected'
+    e.status !== 'rejected' && e.status !== 'pending'
   );
 
   const daysInMonth = Math.ceil((thisMonthEnd.getTime() - thisMonthStart.getTime()) / (1000 * 60 * 60 * 24));

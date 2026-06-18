@@ -27,7 +27,7 @@ export default function ReportsScreen() {
   }, [period]);
 
   const periodExp = useMemo(() =>
-    filterByDateRange(expenses.filter(e => e.status !== 'rejected'), from, to),
+    filterByDateRange(expenses.filter(e => e.status !== 'rejected' && e.status !== 'pending'), from, to),
     [expenses, from, to]
   );
 

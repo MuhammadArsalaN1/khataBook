@@ -51,7 +51,7 @@ export default function ExpensesScreenPremium() {
   }, [scoped, filterType, filterStatus, search]);
 
   // Chart data (uses scoped, excludes rejected)
-  const valid = useMemo(() => scoped.filter(e => e.status !== 'rejected'), [scoped]);
+  const valid = useMemo(() => scoped.filter(e => e.status !== 'rejected' && e.status !== 'pending'), [scoped]);
   const total = useMemo(() => valid.reduce((s, e) => s + e.amount, 0), [valid]);
   const byType = useMemo(() => ({
     personal: valid.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0),
@@ -214,7 +214,7 @@ export default function ExpensesScreenPremium() {
           </ScrollView>
           <View style={styles.summaryStrip}>
             <Text style={styles.summaryStripText}>{filtered.length} entries</Text>
-            <Text style={styles.summaryStripTotal}>{formatMoney(filtered.reduce((s, e) => e.status !== 'rejected' ? s + e.amount : s, 0))}</Text>
+            <Text style={styles.summaryStripTotal}>{formatMoney(filtered.reduce((s, e) => e.status !== 'rejected' && e.status !== 'pending' ? s + e.amount : s, 0))}</Text>
           </View>
         </>
       )}
