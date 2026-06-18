@@ -16,7 +16,7 @@ import DonutChart from '../../components/charts/DonutChart';
 const STATUS_COLORS: Record<ExpenseStatus, string> = {
   draft: COLORS.textLight, pending: COLORS.warning, approved: COLORS.success, rejected: COLORS.danger,
 };
-const CAT_PALETTE = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#EC4899', '#14B8A6'];
+const CAT_PALETTE = COLORS.chart;
 
 export default function ExpensesScreenPremium() {
   const { expenses, currentUser, deleteExpense, approveExpense } = useStore();

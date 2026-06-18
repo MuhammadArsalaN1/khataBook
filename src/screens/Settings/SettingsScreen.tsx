@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
-import { COLORS, TYPE_LABELS, USERS, CURRENCIES } from '../../constants';
+import { COLORS, GRADIENTS, TYPE_LABELS, USERS, CURRENCIES } from '../../constants';
 import { ExpenseType, Currency } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
 
@@ -104,7 +104,7 @@ export default function SettingsScreen() {
       <SafeAreaView edges={['top']}>
         {/* Profile Header */}
         <LinearGradient
-          colors={['#7C3AED', '#6D28D9']}
+          colors={GRADIENTS.header as any}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.profileHeader}
@@ -116,7 +116,7 @@ export default function SettingsScreen() {
             <Text style={styles.profileName}>{currentUser?.name}</Text>
             <Text style={styles.profileEmail}>{currentUser?.email}</Text>
           </View>
-          <View style={[styles.rolePill, { backgroundColor: currentUser?.role === 'admin' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.15)' }]}>
+          <View style={[styles.rolePill, { backgroundColor: 'rgba(26,26,26,0.85)' }]}>
             <Text style={styles.rolePillText}>{currentUser?.role?.toUpperCase()}</Text>
           </View>
         </LinearGradient>
@@ -178,7 +178,7 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <SettingsRow
             icon="📊"
-            iconBg="#EDE9FE"
+            iconBg="#FEF3C7"
             label="Monthly Budgets"
             subtitle={format(now, 'MMMM yyyy')}
             onPress={undefined}
@@ -271,22 +271,22 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(26,26,26,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.5)',
   },
-  profileAvatarText: { color: '#fff', fontWeight: '800', fontSize: 22 },
+  profileAvatarText: { color: COLORS.accent, fontWeight: '800', fontSize: 22 },
   profileInfo: { flex: 1 },
-  profileName: { color: '#fff', fontSize: responsiveFontSize(17), fontWeight: '800' },
-  profileEmail: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(12), marginTop: 2, fontWeight: '500' },
+  profileName: { color: '#1A1A1A', fontSize: responsiveFontSize(17), fontWeight: '800' },
+  profileEmail: { color: 'rgba(26,26,26,0.7)', fontSize: responsiveFontSize(12), marginTop: 2, fontWeight: '500' },
   rolePill: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
   },
-  rolePillText: { color: '#fff', fontSize: responsiveFontSize(10), fontWeight: '800', letterSpacing: 0.5 },
+  rolePillText: { color: COLORS.accent, fontSize: responsiveFontSize(10), fontWeight: '800', letterSpacing: 0.5 },
   scroll: { flex: 1 },
   groupLabel: {
     fontSize: responsiveFontSize(11),

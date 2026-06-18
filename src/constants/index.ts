@@ -12,56 +12,69 @@ export const CATEGORIES: Record<ExpenseType, string[]> = {
 };
 
 export const COLORS = {
-  // Brand - Premium
-  primary: '#7C3AED',
-  primaryLight: '#A78BFA',
-  primaryDark: '#6D28D9',
-  secondary: '#06B6D4',
+  // Brand — White / Black / Yellow theme.
+  // `primary` = the interactive/ink color (black) so buttons keep white text.
+  // `accent` = the yellow highlight (progress bars, pills, selected states).
+  primary: '#1A1A1A',
+  primaryLight: '#FCD34D',   // soft yellow tint (used as pale backgrounds)
+  primaryDark: '#000000',
+  accent: '#F5B700',         // signature yellow
+  accentDark: '#D99E00',
+  accentSoft: '#FEF3C7',     // pale yellow surface
+  onAccent: '#1A1A1A',       // text on yellow
+  secondary: '#CA8A04',      // gold (secondary accents)
   // Semantic
-  success: '#10B981',
+  success: '#16A34A',
   successLight: '#D1FAE5',
   warning: '#F59E0B',
   warningLight: '#FEF3C7',
   danger: '#EF4444',
   dangerLight: '#FEE2E2',
-  // Types - Premium gradients
-  personal: '#3B82F6',
-  personalLight: '#DBEAFE',
-  personalBg: '#F0F9FF',
-  personalGradient: ['#60A5FA', '#3B82F6'],
-  office: '#8B5CF6',
-  officeLight: '#EDE9FE',
-  officeBg: '#FAF5FF',
-  officeGradient: ['#A78BFA', '#8B5CF6'],
-  farm: '#10B981',
+  // Types
+  personal: '#1A1A1A',
+  personalLight: '#E5E5E5',
+  personalBg: '#FAFAFA',
+  personalGradient: ['#3A3A3A', '#1A1A1A'],
+  office: '#F5B700',
+  officeLight: '#FEF3C7',
+  officeBg: '#FFFDF5',
+  officeGradient: ['#FACC15', '#F5B700'],
+  farm: '#16A34A',
   farmLight: '#D1FAE5',
   farmBg: '#F0FDF4',
-  farmGradient: ['#34D399', '#10B981'],
-  // UI - Premium & Modern
-  background: '#F8FAFC',
+  farmGradient: ['#22C55E', '#16A34A'],
+  // UI — soft white surfaces, rounded cards
+  background: '#FAFAF7',
   card: '#FFFFFF',
-  cardSecondary: '#F1F5F9',
-  border: '#E2E8F0',
-  divider: '#E2E8F0',
-  // Text - Dark & Readable
-  text: '#1E293B',
-  textMed: '#475569',
-  textLight: '#78909C',
-  textAlt: '#9CA3AF',
+  cardSecondary: '#F5F5F0',
+  border: '#ECECE6',
+  divider: '#F0F0EA',
+  // Text — black & readable
+  text: '#1A1A1A',
+  textMed: '#52525B',
+  textLight: '#9C9C95',
+  textAlt: '#B4B4AD',
   // Misc
   white: '#FFFFFF',
-  dark: '#0F172A',
-  overlay: 'rgba(15,23,42,0.5)',
-  overlayLight: 'rgba(15,23,42,0.2)',
-  // Shadow colors for depth
-  shadow: 'rgba(0,0,0,0.1)',
-  shadowDark: 'rgba(0,0,0,0.15)',
-  // Chart palette - Premium
-  chart: ['#7C3AED','#06B6D4','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899','#14B8A6'],
+  dark: '#1A1A1A',
+  overlay: 'rgba(26,26,26,0.5)',
+  overlayLight: 'rgba(26,26,26,0.2)',
+  shadow: 'rgba(0,0,0,0.08)',
+  shadowDark: 'rgba(0,0,0,0.14)',
+  // Chart palette — black/yellow led
+  chart: ['#1A1A1A','#F5B700','#16A34A','#EF4444','#CA8A04','#52525B','#FACC15','#84CC16'],
   // Gradient presets
-  incomeGradient: ['#34D399', '#10B981'],
+  incomeGradient: ['#22C55E', '#16A34A'],
   expenseGradient: ['#F87171', '#EF4444'],
-  balanceGradient: ['#60A5FA', '#3B82F6'],
+  balanceGradient: ['#FACC15', '#F5B700'],
+};
+
+// Centralized gradients used across screens (soft, premium).
+export const GRADIENTS = {
+  header: ['#FFE9A8', '#FACC15', '#F5B700'] as string[], // soft gold
+  gold: ['#FDE68A', '#F5B700'] as string[],
+  dark: ['#2A2A2A', '#1A1A1A'] as string[],
+  card: ['#FFFFFF', '#FFFDF5'] as string[],
 };
 
 export const TYPE_LABELS: Record<ExpenseType, string> = {
@@ -167,10 +180,10 @@ export const LOTTIE_ICONS: Record<string, { source: any | null; emoji: string }>
   mobile:    { source: null, emoji: '📲' },
   paypal:    { source: null, emoji: '🌐' },
   card:      { source: null, emoji: '💳' },
-  income:    { source: null, emoji: '💰' },
+  income:    { source: null, emoji: '🪙' },
   expense:   { source: null, emoji: '🧾' },
-  wallet:    { source: null, emoji: '👛' },
-  analytics: { source: null, emoji: '📊' },
+  wallet:    { source: null, emoji: '💼' },
+  analytics: { source: null, emoji: '📈' },
   bell:      { source: null, emoji: '🔔' },
   goal:      { source: null, emoji: '🎯' },
   transfer:  { source: null, emoji: '🔁' },

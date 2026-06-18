@@ -73,7 +73,7 @@ function MainTabs() {
       <Tab.Screen
         name="Analytics"
         component={AnalyticsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📊" label="Analytics" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📈" label="Analytics" focused={focused} /> }}
       />
       {currentUser?.role === 'admin' && (
         <Tab.Screen

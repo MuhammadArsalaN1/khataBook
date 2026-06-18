@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../../store/useStore';
-import { WALLETS, CURRENCIES, COLORS, WalletMeta } from '../../constants';
+import { WALLETS, CURRENCIES, COLORS, GRADIENTS, WalletMeta } from '../../constants';
 import { PaymentMethod, Currency } from '../../types';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
 import { getActiveFiscalMonth } from '../../utils/fiscalMonth';
@@ -86,7 +86,7 @@ export default function WalletScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={['#7C3AED', '#6D28D9', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+      <LinearGradient colors={GRADIENTS.header as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
@@ -222,13 +222,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerBtnText: { color: '#fff', fontSize: 34, fontWeight: '300', lineHeight: 36 },
-  headerTitle: { color: '#fff', fontSize: responsiveFontSize(18), fontWeight: '800' },
+  headerBtnText: { color: '#1A1A1A', fontSize: 34, fontWeight: '300', lineHeight: 36 },
+  headerTitle: { color: '#1A1A1A', fontSize: responsiveFontSize(18), fontWeight: '800' },
   totalCard: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(13), fontWeight: '500' },
-  totalAmount: { color: '#fff', fontSize: responsiveFontSize(32), fontWeight: '800', marginTop: 4 },
-  totalSub: { color: 'rgba(255,255,255,0.6)', fontSize: responsiveFontSize(11), marginTop: 4, fontWeight: '500' },
+  totalLabel: { color: 'rgba(26,26,26,0.65)', fontSize: responsiveFontSize(13), fontWeight: '600' },
+  totalAmount: { color: '#1A1A1A', fontSize: responsiveFontSize(32), fontWeight: '800', marginTop: 4 },
+  totalSub: { color: 'rgba(26,26,26,0.6)', fontSize: responsiveFontSize(11), marginTop: 4, fontWeight: '500' },
   scroll: { flex: 1 },
 
   brandCard: { borderRadius: 22, padding: 18, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
@@ -243,13 +243,13 @@ const styles = StyleSheet.create({
   innerPanel: { backgroundColor: '#fff', borderRadius: 16, padding: 12 },
   noBalance: { fontSize: responsiveFontSize(12), color: '#94A3B8', fontWeight: '500', textAlign: 'center', paddingVertical: 8 },
   agencyGroup: { marginBottom: 6 },
-  agencyLabel: { fontSize: responsiveFontSize(11), fontWeight: '800', color: '#7C3AED', marginBottom: 4, marginTop: 4 },
+  agencyLabel: { fontSize: responsiveFontSize(11), fontWeight: '800', color: COLORS.accentDark, marginBottom: 4, marginTop: 4 },
   balRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
   balFlag: { fontSize: 18 },
   balCur: { fontSize: responsiveFontSize(12), fontWeight: '800', color: '#475569', width: 38 },
   balAmt: { flex: 1, textAlign: 'right', fontSize: responsiveFontSize(14), fontWeight: '800', color: '#1E293B' },
   addBtn: { marginTop: 8, paddingVertical: 10, borderRadius: 10, backgroundColor: '#F1F5F9', alignItems: 'center' },
-  addBtnText: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#7C3AED' },
+  addBtnText: { fontSize: responsiveFontSize(12), fontWeight: '700', color: COLORS.accentDark },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 10, maxHeight: '92%' },

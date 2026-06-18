@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { format, subMonths, addMonths } from 'date-fns';
 import { useStore } from '../../store/useStore';
-import { COLORS, USERS, WALLETS, CURRENCIES, CATEGORY_EMOJI, TYPE_LABELS } from '../../constants';
+import { COLORS, GRADIENTS, USERS, WALLETS, CURRENCIES, CATEGORY_EMOJI, TYPE_LABELS } from '../../constants';
 import { ExpenseType } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
@@ -19,7 +19,7 @@ import BrandMark from '../../components/common/BrandMark';
 const W = Dimensions.get('window').width;
 const CARD_W = (W - 44) / 2;
 
-const TYPE_COLORS: Record<string, string> = { personal: '#3B82F6', office: '#8B5CF6', farm: '#10B981' };
+const TYPE_COLORS: Record<string, string> = { personal: '#1A1A1A', office: '#F5B700', farm: '#16A34A' };
 
 function useCountdown(): Countdown {
   const [c, setC] = useState<Countdown>(() => getResetCountdown());
@@ -158,9 +158,9 @@ export default function DashboardScreenPremium() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <LinearGradient colors={['#7C3AED', '#6D28D9', '#5B21B6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGrad}>
+      <LinearGradient colors={GRADIENTS.header as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGrad}>
         <SafeAreaView edges={['top']} style={{ width: '100%' }}>
           {/* Top row */}
           <View style={styles.topRow}>
@@ -201,7 +201,7 @@ export default function DashboardScreenPremium() {
           {/* Income / Expense glass cards */}
           <View style={styles.moneyRow}>
             <View style={styles.moneyCard}>
-              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(134,239,172,0.25)' }]}>
+              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(22,163,74,0.18)' }]}>
                 <AnimatedIcon name="income" size={26} emojiSize={18} />
               </View>
               <View style={{ flex: 1 }}>
@@ -211,12 +211,12 @@ export default function DashboardScreenPremium() {
             </View>
             <View style={styles.moneyDivider} />
             <View style={styles.moneyCard}>
-              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(252,165,165,0.25)' }]}>
+              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(239,68,68,0.16)' }]}>
                 <AnimatedIcon name="expense" size={26} emojiSize={18} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.moneyLabel}>Expenses</Text>
-                <Text style={[styles.moneyAmount, { color: '#FCA5A5' }]}>{formatMoney(totalSpent)}</Text>
+                <Text style={[styles.moneyAmount, { color: '#B91C1C' }]}>{formatMoney(totalSpent)}</Text>
               </View>
             </View>
           </View>
@@ -243,8 +243,8 @@ export default function DashboardScreenPremium() {
             {[
               { lottie: 'expense', label: 'Add Expense', grad: ['#FEE2E2', '#FECACA'], to: () => navigation.navigate('AddExpense') },
               { lottie: 'income', label: 'Add Income', grad: ['#D1FAE5', '#A7F3D0'], to: () => navigation.navigate('Earnings') },
-              { lottie: 'wallet', label: 'Wallets', grad: ['#EDE9FE', '#DDD6FE'], to: () => navigation.navigate('Wallet') },
-              { lottie: 'analytics', label: 'Analytics', grad: ['#DBEAFE', '#BFDBFE'], to: () => navigation.navigate('Analytics') },
+              { lottie: 'wallet', label: 'Wallets', grad: ['#FEF3C7', '#FDE68A'], to: () => navigation.navigate('Wallet') },
+              { lottie: 'analytics', label: 'Analytics', grad: ['#FEF9C3', '#FDE047'], to: () => navigation.navigate('Analytics') },
             ].map(qa => (
               <TouchableOpacity key={qa.label} style={styles.qaBtn} onPress={qa.to} activeOpacity={0.7}>
                 <LinearGradient colors={qa.grad as any} style={styles.qaIconBg}>
@@ -481,7 +481,7 @@ export default function DashboardScreenPremium() {
               return (
                 <TouchableOpacity key={exp.id} style={styles.txRow}
                   onPress={() => navigation.navigate('AddExpense', { expenseId: exp.id })} activeOpacity={0.7}>
-                  <View style={[styles.txIcon, { backgroundColor: (TYPE_COLORS[exp.type] ?? '#7C3AED') + '15' }]}>
+                  <View style={[styles.txIcon, { backgroundColor: (TYPE_COLORS[exp.type] ?? COLORS.primary) + '15' }]}>
                     <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[exp.category] ?? '💰'}</Text>
                   </View>
                   <View style={styles.txInfo}>
@@ -566,20 +566,20 @@ function actionEmoji(action: string): string {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1, backgroundColor: COLORS.background },
   headerGrad: { paddingBottom: 22, paddingHorizontal: 20 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, marginBottom: 18 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(26,26,26,0.85)',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)',
   },
-  avatarText: { color: '#fff', fontWeight: '800', fontSize: 18 },
-  greeting: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(12), fontWeight: '500' },
-  userName: { color: '#fff', fontSize: responsiveFontSize(16), fontWeight: '800', marginTop: 1 },
+  avatarText: { color: COLORS.accent, fontWeight: '800', fontSize: 18 },
+  greeting: { color: 'rgba(26,26,26,0.65)', fontSize: responsiveFontSize(12), fontWeight: '600' },
+  userName: { color: '#1A1A1A', fontSize: responsiveFontSize(16), fontWeight: '800', marginTop: 1 },
   bellBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.6)',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(26,26,26,0.1)',
   },
   bellBadge: {
     position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9,
@@ -587,25 +587,25 @@ const styles = StyleSheet.create({
   },
   bellBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
   balanceSection: { alignItems: 'center', marginBottom: 20 },
-  balanceLabel: { color: 'rgba(255,255,255,0.75)', fontSize: responsiveFontSize(13), fontWeight: '500', marginBottom: 6 },
-  balanceAmount: { color: '#fff', fontSize: responsiveFontSize(36), fontWeight: '800', letterSpacing: -0.5 },
+  balanceLabel: { color: 'rgba(26,26,26,0.65)', fontSize: responsiveFontSize(13), fontWeight: '600', marginBottom: 6 },
+  balanceAmount: { color: '#1A1A1A', fontSize: responsiveFontSize(36), fontWeight: '800', letterSpacing: -0.5 },
   balanceMetaRow: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' },
   fiscalPill: {
-    backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(26,26,26,0.08)',
   },
-  fiscalPillText: { color: '#fff', fontSize: responsiveFontSize(11), fontWeight: '600' },
+  fiscalPillText: { color: '#1A1A1A', fontSize: responsiveFontSize(11), fontWeight: '700' },
   moneyRow: {
-    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 18,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', paddingVertical: 14, paddingHorizontal: 16,
+    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 18,
+    borderWidth: 1, borderColor: 'rgba(26,26,26,0.06)', paddingVertical: 14, paddingHorizontal: 16,
   },
   moneyCard: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  moneyDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 14 },
+  moneyDivider: { width: 1, backgroundColor: 'rgba(26,26,26,0.12)', marginHorizontal: 14 },
   moneyIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  moneyLabel: { color: 'rgba(255,255,255,0.7)', fontSize: responsiveFontSize(11), fontWeight: '500' },
-  moneyAmount: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '800', marginTop: 2 },
+  moneyLabel: { color: 'rgba(26,26,26,0.6)', fontSize: responsiveFontSize(11), fontWeight: '600' },
+  moneyAmount: { color: '#1A1A1A', fontSize: responsiveFontSize(14), fontWeight: '800', marginTop: 2 },
 
-  content: { flex: 1, backgroundColor: '#F8FAFC' },
+  content: { flex: 1, backgroundColor: COLORS.background },
   insightBanner: {
     margin: 16, marginBottom: 4, backgroundColor: '#1E293B', borderRadius: 16,
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12,
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   insightIcon: { fontSize: 20 },
   insightText: { color: '#fff', fontSize: responsiveFontSize(13), fontWeight: '700' },
   insightSub: { color: '#94A3B8', fontSize: responsiveFontSize(11), fontWeight: '500', marginTop: 2 },
-  insightArrow: { color: '#A78BFA', fontSize: 24, fontWeight: '300' },
+  insightArrow: { color: COLORS.accent, fontSize: 24, fontWeight: '300' },
 
   section: { paddingLeft: 16, marginTop: 20, paddingRight: 0 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingRight: 16 },
@@ -635,19 +635,19 @@ const styles = StyleSheet.create({
   walletMiniInner: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: 12 },
   walletMiniBal: { fontSize: responsiveFontSize(16), fontWeight: '800', color: '#1E293B' },
   walletMiniMulti: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#334155', marginBottom: 3 },
-  walletMiniPkr: { fontSize: responsiveFontSize(10), fontWeight: '600', color: '#7C3AED', marginTop: 4 },
+  walletMiniPkr: { fontSize: responsiveFontSize(10), fontWeight: '700', color: COLORS.accentDark, marginTop: 4 },
 
   goalCard: {
     backgroundColor: COLORS.card, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center',
     marginBottom: 10, marginRight: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  goalIconBubble: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#EDE9FE', alignItems: 'center', justifyContent: 'center' },
+  goalIconBubble: { width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
   goalName: { fontSize: responsiveFontSize(14), fontWeight: '700', color: COLORS.text },
   goalSub: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '500', marginTop: 2, marginBottom: 8 },
   goalBarBg: { height: 6, backgroundColor: '#E2E8F0', borderRadius: 3 },
-  goalBarFill: { height: 6, backgroundColor: COLORS.primary, borderRadius: 3 },
-  goalCircle: { width: 50, height: 50, borderRadius: 25, borderWidth: 2.5, borderColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  goalPct: { fontSize: responsiveFontSize(12), fontWeight: '800', color: COLORS.primary },
+  goalBarFill: { height: 6, backgroundColor: COLORS.accent, borderRadius: 3 },
+  goalCircle: { width: 50, height: 50, borderRadius: 25, borderWidth: 2.5, borderColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
+  goalPct: { fontSize: responsiveFontSize(12), fontWeight: '800', color: COLORS.accentDark },
 
   txRow: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14,
@@ -701,8 +701,8 @@ const styles = StyleSheet.create({
   trendBars: { flexDirection: 'row', gap: 3, alignItems: 'flex-end', height: 92 },
   trendBar: { width: 9, borderTopLeftRadius: 3, borderTopRightRadius: 3 },
   trendLabel: { fontSize: 9, color: COLORS.textLight, fontWeight: '600', marginTop: 5 },
-  nwCurrent: { fontSize: responsiveFontSize(20), fontWeight: '800', color: COLORS.primary, marginBottom: 12 },
-  nwBar: { width: 16, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: '#7C3AED' },
+  nwCurrent: { fontSize: responsiveFontSize(20), fontWeight: '800', color: COLORS.accentDark, marginBottom: 12 },
+  nwBar: { width: 16, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: COLORS.accent },
   goalProjection: { fontSize: responsiveFontSize(10), color: COLORS.primary, fontWeight: '600', marginTop: 6 },
 
   recurRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },

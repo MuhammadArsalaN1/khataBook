@@ -43,7 +43,7 @@ const bar = StyleSheet.create({
   row: { marginBottom: 16 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   label: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#1E293B', flex: 1 },
-  pct: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#7C3AED' },
+  pct: { fontSize: responsiveFontSize(12), fontWeight: '700', color: COLORS.accentDark },
   track: { height: 10, backgroundColor: '#F1F5F9', borderRadius: 5, overflow: 'hidden' },
   fill: { height: 10, borderRadius: 5 },
   amount: { fontSize: responsiveFontSize(11), color: '#64748B', marginTop: 4, fontWeight: '500' },
@@ -150,7 +150,7 @@ export default function AnalyticsScreen() {
     { id: 'wallets', label: 'Wallets' },
   ];
 
-  const CAT_COLORS = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#EC4899', '#14B8A6'];
+  const CAT_COLORS = COLORS.chart;
 
   return (
     <View style={styles.root}>
@@ -295,7 +295,7 @@ export default function AnalyticsScreen() {
                 value={userContrib[u.id] ?? 0}
                 max={maxUser}
                 total={totalUser}
-                color={u.role === 'admin' ? '#7C3AED' : '#06B6D4'}
+                color={u.role === 'admin' ? COLORS.primary : COLORS.accent}
               />
             ))}
           </View>
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F1F5F9',
   },
-  tabBtnActive: { backgroundColor: '#7C3AED' },
+  tabBtnActive: { backgroundColor: COLORS.primary },
   tabText: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#64748B' },
   tabTextActive: { color: '#fff', fontWeight: '700' },
   scroll: { flex: 1 },
