@@ -32,6 +32,9 @@
         "projectId": "4da35382-d5ac-4200-8b02-71e621c57dde"
       }
     },
-    "owner": "itcorpinc"
+    "owner": "itcorpinc",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

@@ -12,6 +12,7 @@ import {
 import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency } from '../types';
 import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
 import { ExchangeRates } from '../utils/currency';
+import { saveCredentials, getCredentials, clearCredentials, promptBiometric } from '../utils/biometric';
 
 // ── Global state ─────────────────────────────────────────────────────────────
 interface AppState {
@@ -140,6 +141,9 @@ export function useStore() {
     setState({ authError: null, authLoading: true });
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // remember credentials so the user can unlock with biometrics next time
+      const appUser = USERS.find(u => u.email === email);
+      await saveCredentials(email, password, appUser?.name);
     } catch (e: any) {
       const msg =
         e.code === 'auth/invalid-credential' ? 'Invalid email or password.' :
@@ -152,7 +156,25 @@ export function useStore() {
   }, []);
 
   const logout = useCallback(async () => {
+    await clearCredentials();
     await signOut(auth);
+  }, []);
+
+  // Unlock with fingerprint/Face ID using the last saved credentials.
+  const biometricLogin = useCallback(async (): Promise<boolean> => {
+    const creds = await getCredentials();
+    if (!creds) return false;
+    const ok = await promptBiometric('Unlock Khata Book');
+    if (!ok) return false;
+    setState({ authError: null, authLoading: true });
+    try {
+      await signInWithEmailAndPassword(auth, creds.email, creds.password);
+      return true;
+    } catch {
+      setState({ authError: 'Biometric login failed — please sign in with your password.', authLoading: false });
+      await clearCredentials();
+      return false;
+    }
   }, []);
 
   // ── Expenses ──────────────────────────────────────────────────────────────
@@ -304,6 +326,7 @@ export function useStore() {
     loading: state.authLoading || state.dataLoading,
     login,
     logout,
+    biometricLogin,
     addExpense,
     editExpense,
     deleteExpense,

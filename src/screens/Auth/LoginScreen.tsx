@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
    ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -7,12 +7,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { USERS, COLORS } from '../../constants';
 import { useStore } from '../../store/useStore';
 import { User } from '../../types';
+import { isBiometricAvailable, getBiometricLabel, getCredentials } from '../../utils/biometric';
 
 export default function LoginScreen() {
-  const { login, authLoading, authError } = useStore();
+  const { login, authLoading, authError, biometricLogin } = useStore();
   const [selected, setSelected] = useState<User | null>(null);
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [bioReady, setBioReady] = useState(false);
+  const [bioLabel, setBioLabel] = useState('Biometrics');
+  const [bioName, setBioName] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    (async () => {
+      const [avail, creds] = await Promise.all([isBiometricAvailable(), getCredentials()]);
+      if (avail && creds) {
+        setBioReady(true);
+        setBioName(creds.name);
+        setBioLabel(await getBiometricLabel());
+        // auto-prompt once on open for a fast unlock
+        biometricLogin();
+      }
+    })();
+  }, []);
 
   const handleLogin = async () => {
     if (!selected) return;
@@ -34,6 +51,19 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.card}>
+            {/* Biometric unlock */}
+            {bioReady && (
+              <>
+                <TouchableOpacity style={styles.bioBtn} onPress={() => biometricLogin()} activeOpacity={0.8} disabled={authLoading}>
+                  <Text style={styles.bioIcon}>🔐</Text>
+                  <Text style={styles.bioText}>Unlock{bioName ? ` as ${bioName}` : ''} with {bioLabel}</Text>
+                </TouchableOpacity>
+                <View style={styles.orRow}>
+                  <View style={styles.orLine} /><Text style={styles.orText}>or use password</Text><View style={styles.orLine} />
+                </View>
+              </>
+            )}
+
             {/* Step 1 — select profile */}
             <Text style={styles.sectionLabel}>1. Select Profile</Text>
             {USERS.map(user => (
@@ -123,6 +153,12 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, color: COLORS.white + 'CC', marginTop: 4 },
   card: { width: '100%', backgroundColor: COLORS.white, borderRadius: 20, padding: 24, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 20, elevation: 10 },
   sectionLabel: { fontSize: 13, fontWeight: '700', color: COLORS.textLight, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  bioBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: COLORS.accentSoft, borderRadius: 12, paddingVertical: 14, borderWidth: 1.5, borderColor: COLORS.accent },
+  bioIcon: { fontSize: 22 },
+  bioText: { fontSize: 15, fontWeight: '700', color: COLORS.text },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 18 },
+  orLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  orText: { fontSize: 11, color: COLORS.textLight, fontWeight: '600' },
   userCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 2, borderColor: COLORS.border, marginBottom: 10, backgroundColor: COLORS.background },
   userCardSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '08' },
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
