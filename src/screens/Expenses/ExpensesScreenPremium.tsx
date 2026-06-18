@@ -260,13 +260,13 @@ export default function ExpensesScreenPremium() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
+  safe: { flex: 1, backgroundColor: '#FAFAF7' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   title: { fontSize: responsiveFontSize(24), fontWeight: '800', color: COLORS.text },
   subtitle: { fontSize: responsiveFontSize(12), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
   addBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(13) },
-  viewToggle: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 14, backgroundColor: '#E9EDF3', borderRadius: 12, padding: 4 },
+  viewToggle: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 14, backgroundColor: '#F5F5F0', borderRadius: 12, padding: 4 },
   viewBtn: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
   viewBtnActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
   viewBtnText: { fontSize: responsiveFontSize(13), fontWeight: '600', color: COLORS.textLight },

@@ -42,11 +42,11 @@ function BarRow({ label, value, max, color, total }: {
 const bar = StyleSheet.create({
   row: { marginBottom: 16 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  label: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#1E293B', flex: 1 },
+  label: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#1A1A1A', flex: 1 },
   pct: { fontSize: responsiveFontSize(12), fontWeight: '700', color: COLORS.accentDark },
-  track: { height: 10, backgroundColor: '#F1F5F9', borderRadius: 5, overflow: 'hidden' },
+  track: { height: 10, backgroundColor: '#F5F5F0', borderRadius: 5, overflow: 'hidden' },
   fill: { height: 10, borderRadius: 5 },
-  amount: { fontSize: responsiveFontSize(11), color: '#64748B', marginTop: 4, fontWeight: '500' },
+  amount: { fontSize: responsiveFontSize(11), color: '#52525B', marginTop: 4, fontWeight: '500' },
 });
 
 function IncomeExpenseChart({ comparisons }: { comparisons: any[] }) {
@@ -56,11 +56,11 @@ function IncomeExpenseChart({ comparisons }: { comparisons: any[] }) {
     <View>
       <View style={iec.legend}>
         <View style={iec.legendItem}>
-          <View style={[iec.legendDot, { backgroundColor: '#10B981' }]} />
+          <View style={[iec.legendDot, { backgroundColor: '#D99E00' }]} />
           <Text style={iec.legendText}>Income</Text>
         </View>
         <View style={iec.legendItem}>
-          <View style={[iec.legendDot, { backgroundColor: '#EF4444' }]} />
+          <View style={[iec.legendDot, { backgroundColor: '#1A1A1A' }]} />
           <Text style={iec.legendText}>Expenses</Text>
         </View>
       </View>
@@ -87,7 +87,7 @@ const iec = StyleSheet.create({
   legend: { flexDirection: 'row', gap: 16, marginBottom: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: responsiveFontSize(12), color: '#64748B', fontWeight: '500' },
+  legendText: { fontSize: responsiveFontSize(12), color: '#52525B', fontWeight: '500' },
   chartArea: { justifyContent: 'flex-end' },
   bars: {
     flexDirection: 'row',
@@ -98,8 +98,8 @@ const iec = StyleSheet.create({
   },
   barGroup: { alignItems: 'center', flex: 1 },
   barsContainer: { flexDirection: 'row', gap: 2, alignItems: 'flex-end' },
-  expBar: { width: 14, backgroundColor: '#EF4444', borderTopLeftRadius: 4, borderTopRightRadius: 4, minHeight: 4 },
-  barLabel: { fontSize: 9, color: '#94A3B8', marginTop: 6, fontWeight: '600' },
+  expBar: { width: 14, backgroundColor: '#1A1A1A', borderTopLeftRadius: 4, borderTopRightRadius: 4, minHeight: 4 },
+  barLabel: { fontSize: 9, color: '#9C9C95', marginTop: 6, fontWeight: '600' },
 });
 
 export default function AnalyticsScreen() {
@@ -189,29 +189,29 @@ export default function AnalyticsScreen() {
 
             {/* Summary row */}
             <View style={styles.summaryRow}>
-              <View style={[styles.summaryCard, { backgroundColor: '#F0FDF4' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: '#FFFDF5' }]}>
                 <Text style={styles.summaryEmoji}>📈</Text>
-                <Text style={[styles.summaryLabel, { color: '#15803D' }]}>Total Income</Text>
-                <Text style={[styles.summaryAmt, { color: '#166534' }]}>Rs. {totalIncome.toLocaleString()}</Text>
+                <Text style={[styles.summaryLabel, { color: '#D99E00' }]}>Total Income</Text>
+                <Text style={[styles.summaryAmt, { color: '#1A1A1A' }]}>Rs. {totalIncome.toLocaleString()}</Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: '#FEF2F2' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: '#F5F5F0' }]}>
                 <Text style={styles.summaryEmoji}>📉</Text>
-                <Text style={[styles.summaryLabel, { color: '#DC2626' }]}>Total Expenses</Text>
-                <Text style={[styles.summaryAmt, { color: '#991B1B' }]}>Rs. {totalExpenses.toLocaleString()}</Text>
+                <Text style={[styles.summaryLabel, { color: '#1A1A1A' }]}>Total Expenses</Text>
+                <Text style={[styles.summaryAmt, { color: '#1A1A1A' }]}>Rs. {totalExpenses.toLocaleString()}</Text>
               </View>
             </View>
             <View style={styles.summaryRow}>
-              <View style={[styles.summaryCard, { backgroundColor: netProfit >= 0 ? '#F0FDF4' : '#FEF2F2' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: netProfit >= 0 ? '#FFFDF5' : '#F5F5F0' }]}>
                 <Text style={styles.summaryEmoji}>{netProfit >= 0 ? '💚' : '❤️'}</Text>
-                <Text style={[styles.summaryLabel, { color: netProfit >= 0 ? '#15803D' : '#DC2626' }]}>Net Profit</Text>
-                <Text style={[styles.summaryAmt, { color: netProfit >= 0 ? '#166534' : '#991B1B' }]}>
+                <Text style={[styles.summaryLabel, { color: netProfit >= 0 ? '#D99E00' : '#1A1A1A' }]}>Net Profit</Text>
+                <Text style={[styles.summaryAmt, { color: netProfit >= 0 ? '#1A1A1A' : '#1A1A1A' }]}>
                   Rs. {Math.abs(netProfit).toLocaleString()}
                 </Text>
               </View>
-              <View style={[styles.summaryCard, { backgroundColor: '#EFF6FF' }]}>
+              <View style={[styles.summaryCard, { backgroundColor: '#FFFDF5' }]}>
                 <Text style={styles.summaryEmoji}>📊</Text>
-                <Text style={[styles.summaryLabel, { color: '#1D4ED8' }]}>Avg Monthly</Text>
-                <Text style={[styles.summaryAmt, { color: '#1E3A8A' }]}>Rs. {Math.round(avgMonthly).toLocaleString()}</Text>
+                <Text style={[styles.summaryLabel, { color: '#1A1A1A' }]}>Avg Monthly</Text>
+                <Text style={[styles.summaryAmt, { color: '#1A1A1A' }]}>Rs. {Math.round(avgMonthly).toLocaleString()}</Text>
               </View>
             </View>
 
@@ -223,10 +223,10 @@ export default function AnalyticsScreen() {
                   {insights.trend === 'increasing' ? '📈 Spending is increasing' : '📉 Spending is decreasing'}
                 </Text>
                 <View style={[styles.trendBadge, {
-                  backgroundColor: insights.trend === 'increasing' ? '#FEF2F2' : '#F0FDF4',
+                  backgroundColor: insights.trend === 'increasing' ? '#F5F5F0' : '#FFFDF5',
                 }]}>
                   <Text style={[styles.trendBadgeText, {
-                    color: insights.trend === 'increasing' ? '#DC2626' : '#15803D',
+                    color: insights.trend === 'increasing' ? '#1A1A1A' : '#D99E00',
                   }]}>
                     {insights.trend === 'increasing' ? '▲ Rising' : '▼ Improving'}
                   </Text>
@@ -238,11 +238,11 @@ export default function AnalyticsScreen() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Month by Month</Text>
               {comparisons.slice().reverse().map((c, i) => (
-                <View key={i} style={[styles.monthRow, i < comparisons.length - 1 && { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }]}>
+                <View key={i} style={[styles.monthRow, i < comparisons.length - 1 && { borderBottomWidth: 1, borderBottomColor: '#F5F5F0' }]}>
                   <Text style={styles.monthLabel}>{c.label}</Text>
                   <Text style={styles.monthTotal}>Rs. {c.total.toLocaleString()}</Text>
                   {c.change !== undefined && (
-                    <Text style={[styles.monthChange, { color: c.change >= 0 ? '#DC2626' : '#15803D' }]}>
+                    <Text style={[styles.monthChange, { color: c.change >= 0 ? '#1A1A1A' : '#D99E00' }]}>
                       {c.change >= 0 ? '▲' : '▼'} {Math.abs(c.change).toFixed(1)}%
                     </Text>
                   )}
@@ -330,19 +330,19 @@ export default function AnalyticsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1, backgroundColor: '#FAFAF7' },
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF7',
   },
-  title: { fontSize: responsiveFontSize(24), fontWeight: '800', color: '#1E293B' },
-  subtitle: { fontSize: responsiveFontSize(13), color: '#94A3B8', fontWeight: '500', marginTop: 2 },
+  title: { fontSize: responsiveFontSize(24), fontWeight: '800', color: '#1A1A1A' },
+  subtitle: { fontSize: responsiveFontSize(13), color: '#9C9C95', fontWeight: '500', marginTop: 2 },
   tabBar: {
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#ECECE6',
   },
   tabBarInner: {
     paddingHorizontal: 16,
@@ -353,10 +353,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F5F5F0',
   },
   tabBtnActive: { backgroundColor: COLORS.primary },
-  tabText: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#64748B' },
+  tabText: { fontSize: responsiveFontSize(13), fontWeight: '600', color: '#52525B' },
   tabTextActive: { color: '#fff', fontWeight: '700' },
   scroll: { flex: 1 },
   card: {
@@ -371,8 +371,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  cardTitle: { fontSize: responsiveFontSize(15), fontWeight: '700', color: '#1E293B', marginBottom: 4 },
-  cardSub: { fontSize: responsiveFontSize(12), color: '#94A3B8', fontWeight: '500', marginBottom: 16 },
+  cardTitle: { fontSize: responsiveFontSize(15), fontWeight: '700', color: '#1A1A1A', marginBottom: 4 },
+  cardSub: { fontSize: responsiveFontSize(12), color: '#9C9C95', fontWeight: '500', marginBottom: 16 },
   summaryRow: {
     flexDirection: 'row',
     gap: 12,
@@ -388,13 +388,13 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: responsiveFontSize(11), fontWeight: '600', marginBottom: 4 },
   summaryAmt: { fontSize: responsiveFontSize(15), fontWeight: '800' },
   trendRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  trendText: { fontSize: responsiveFontSize(14), fontWeight: '600', color: '#1E293B', flex: 1 },
+  trendText: { fontSize: responsiveFontSize(14), fontWeight: '600', color: '#1A1A1A', flex: 1 },
   trendBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   trendBadgeText: { fontSize: responsiveFontSize(12), fontWeight: '700' },
   monthRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
-  monthLabel: { flex: 1, fontSize: responsiveFontSize(13), fontWeight: '600', color: '#475569' },
-  monthTotal: { fontSize: responsiveFontSize(13), fontWeight: '700', color: '#1E293B', marginRight: 12 },
+  monthLabel: { flex: 1, fontSize: responsiveFontSize(13), fontWeight: '600', color: '#52525B' },
+  monthTotal: { fontSize: responsiveFontSize(13), fontWeight: '700', color: '#1A1A1A', marginRight: 12 },
   monthChange: { fontSize: responsiveFontSize(12), fontWeight: '700', width: 60, textAlign: 'right' },
   emptyState: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: responsiveFontSize(14), color: '#94A3B8', fontWeight: '600', marginTop: 10 },
+  emptyText: { fontSize: responsiveFontSize(14), color: '#9C9C95', fontWeight: '600', marginTop: 10 },
 });

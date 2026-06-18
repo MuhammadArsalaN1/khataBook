@@ -152,11 +152,11 @@ export default function ActivityScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
+  safe: { flex: 1, backgroundColor: '#FAFAF7' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   title: { fontSize: responsiveFontSize(24), fontWeight: '800', color: COLORS.text },
   subtitle: { fontSize: responsiveFontSize(12), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
-  layoutToggle: { flexDirection: 'row', backgroundColor: '#E9EDF3', borderRadius: 10, padding: 3 },
+  layoutToggle: { flexDirection: 'row', backgroundColor: '#F5F5F0', borderRadius: 10, padding: 3 },
   layoutBtn: { width: 38, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   layoutBtnActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
   layoutBtnText: { fontSize: 18, color: COLORS.textLight },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   chartTitle: { fontSize: responsiveFontSize(14), fontWeight: '700', color: COLORS.text, marginBottom: 12 },
   barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
   barLabel: { width: 76, fontSize: responsiveFontSize(11), color: COLORS.textMed, fontWeight: '600', textTransform: 'capitalize' },
-  barTrack: { flex: 1, height: 10, backgroundColor: '#F1F5F9', borderRadius: 5, overflow: 'hidden', marginHorizontal: 8 },
+  barTrack: { flex: 1, height: 10, backgroundColor: '#F5F5F0', borderRadius: 5, overflow: 'hidden', marginHorizontal: 8 },
   barFill: { height: 10, borderRadius: 5 },
   barCount: { width: 28, fontSize: responsiveFontSize(11), color: COLORS.text, fontWeight: '700', textAlign: 'right' },
   search: { backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: responsiveFontSize(14), color: COLORS.text, marginBottom: 10, borderWidth: 1, borderColor: COLORS.border },

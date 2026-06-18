@@ -149,7 +149,7 @@ export default function AddExpenseScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
+  safe: { flex: 1, backgroundColor: '#FAFAF7' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn: { padding: 4, width: 60 },
   backText: { color: COLORS.primary, fontWeight: '700', fontSize: responsiveFontSize(15) },
@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
   receiptBtn: { backgroundColor: '#fff', borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 14, borderWidth: 1, borderColor: COLORS.border },
   receiptBtnText: { color: COLORS.text, fontWeight: '600', fontSize: responsiveFontSize(14) },
   approvalNote: { backgroundColor: '#FEF3C7', borderRadius: 12, padding: 12, marginTop: 14 },
-  approvalNoteText: { color: '#92400E', fontSize: responsiveFontSize(12), fontWeight: '500' },
+  approvalNoteText: { color: '#1A1A1A', fontSize: responsiveFontSize(12), fontWeight: '500' },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 24 },
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: responsiveFontSize(16) },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 10 },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginBottom: 8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(26,26,26,0.55)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#FAFAF7', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 10 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#ECECE6', alignSelf: 'center', marginBottom: 8 },
   amountPreview: { alignItems: 'center', paddingVertical: 10 },
   amountPreviewText: { fontSize: responsiveFontSize(34), fontWeight: '800', color: COLORS.primary },
 });

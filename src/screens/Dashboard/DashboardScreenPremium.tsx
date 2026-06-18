@@ -19,7 +19,7 @@ import BrandMark from '../../components/common/BrandMark';
 const W = Dimensions.get('window').width;
 const CARD_W = (W - 44) / 2;
 
-const TYPE_COLORS: Record<string, string> = { personal: '#1A1A1A', office: '#F5B700', farm: '#16A34A' };
+const TYPE_COLORS: Record<string, string> = { personal: '#1A1A1A', office: '#F5B700', farm: '#D99E00' };
 
 function useCountdown(): Countdown {
   const [c, setC] = useState<Countdown>(() => getResetCountdown());
@@ -201,7 +201,7 @@ export default function DashboardScreenPremium() {
           {/* Income / Expense glass cards */}
           <View style={styles.moneyRow}>
             <View style={styles.moneyCard}>
-              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(22,163,74,0.18)' }]}>
+              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(245,183,0,0.28)' }]}>
                 <AnimatedIcon name="income" size={26} emojiSize={18} />
               </View>
               <View style={{ flex: 1 }}>
@@ -211,12 +211,12 @@ export default function DashboardScreenPremium() {
             </View>
             <View style={styles.moneyDivider} />
             <View style={styles.moneyCard}>
-              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(239,68,68,0.16)' }]}>
+              <View style={[styles.moneyIcon, { backgroundColor: 'rgba(26,26,26,0.1)' }]}>
                 <AnimatedIcon name="expense" size={26} emojiSize={18} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.moneyLabel}>Expenses</Text>
-                <Text style={[styles.moneyAmount, { color: '#B91C1C' }]}>{formatMoney(totalSpent)}</Text>
+                <Text style={[styles.moneyAmount, { color: '#1A1A1A' }]}>{formatMoney(totalSpent)}</Text>
               </View>
             </View>
           </View>
@@ -241,8 +241,8 @@ export default function DashboardScreenPremium() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.qaRow}>
             {[
-              { lottie: 'expense', label: 'Add Expense', grad: ['#FEE2E2', '#FECACA'], to: () => navigation.navigate('AddExpense') },
-              { lottie: 'income', label: 'Add Income', grad: ['#D1FAE5', '#A7F3D0'], to: () => navigation.navigate('Earnings') },
+              { lottie: 'expense', label: 'Add Expense', grad: ['#F5F5F0', '#ECECE6'], to: () => navigation.navigate('AddExpense') },
+              { lottie: 'income', label: 'Add Income', grad: ['#FEF3C7', '#FEF3C7'], to: () => navigation.navigate('Earnings') },
               { lottie: 'wallet', label: 'Wallets', grad: ['#FEF3C7', '#FDE68A'], to: () => navigation.navigate('Wallet') },
               { lottie: 'analytics', label: 'Analytics', grad: ['#FEF9C3', '#FDE047'], to: () => navigation.navigate('Analytics') },
             ].map(qa => (
@@ -343,15 +343,15 @@ export default function DashboardScreenPremium() {
           <Text style={styles.sectionTitle}>6-Month Trend</Text>
           <View style={styles.plainCard}>
             <View style={styles.legendRow}>
-              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#10B981' }]} /><Text style={styles.legendText}>Income</Text></View>
-              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={styles.legendText}>Expense</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#D99E00' }]} /><Text style={styles.legendText}>Income</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#1A1A1A' }]} /><Text style={styles.legendText}>Expense</Text></View>
             </View>
             <View style={styles.trendChart}>
               {trend.map((t, i) => (
                 <View key={i} style={styles.trendCol}>
                   <View style={styles.trendBars}>
-                    <View style={[styles.trendBar, { height: Math.max((t.inc / trendMax) * 90, 2), backgroundColor: '#10B981' }]} />
-                    <View style={[styles.trendBar, { height: Math.max((t.exp / trendMax) * 90, 2), backgroundColor: '#EF4444' }]} />
+                    <View style={[styles.trendBar, { height: Math.max((t.inc / trendMax) * 90, 2), backgroundColor: '#D99E00' }]} />
+                    <View style={[styles.trendBar, { height: Math.max((t.exp / trendMax) * 90, 2), backgroundColor: '#1A1A1A' }]} />
                   </View>
                   <Text style={styles.trendLabel}>{t.label}</Text>
                 </View>
@@ -504,11 +504,11 @@ export default function DashboardScreenPremium() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>This Month</Text>
           <View style={styles.summaryGrid}>
-            <SummaryCard emoji="📈" bg="#F0FDF4" label="Income" color="#15803D" amt={formatMoney(totalIncome)} />
-            <SummaryCard emoji="📉" bg="#FEF2F2" label="Expenses" color="#DC2626" amt={formatMoney(totalSpent)} />
-            <SummaryCard emoji="💧" bg="#EFF6FF" label="Liquid Assets" color="#1D4ED8" amt={formatPKRCompact(totalLiquid)} />
-            <SummaryCard emoji={isPositive ? '✅' : '⚠️'} bg={isPositive ? '#F0FDF4' : '#FEF2F2'}
-              label={isPositive ? 'Surplus' : 'Deficit'} color={isPositive ? '#15803D' : '#DC2626'} amt={formatMoney(Math.abs(balance))} />
+            <SummaryCard emoji="📈" bg="#FFFDF5" label="Income" color="#D99E00" amt={formatMoney(totalIncome)} />
+            <SummaryCard emoji="📉" bg="#F5F5F0" label="Expenses" color="#1A1A1A" amt={formatMoney(totalSpent)} />
+            <SummaryCard emoji="💧" bg="#FFFDF5" label="Liquid Assets" color="#1A1A1A" amt={formatPKRCompact(totalLiquid)} />
+            <SummaryCard emoji={isPositive ? '✅' : '⚠️'} bg={isPositive ? '#FFFDF5' : '#F5F5F0'}
+              label={isPositive ? 'Surplus' : 'Deficit'} color={isPositive ? '#D99E00' : '#1A1A1A'} amt={formatMoney(Math.abs(balance))} />
           </View>
 
           {/* Share report */}
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   },
   bellBadge: {
     position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+    backgroundColor: '#1A1A1A', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
   },
   bellBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
   balanceSection: { alignItems: 'center', marginBottom: 20 },
@@ -607,12 +607,12 @@ const styles = StyleSheet.create({
 
   content: { flex: 1, backgroundColor: COLORS.background },
   insightBanner: {
-    margin: 16, marginBottom: 4, backgroundColor: '#1E293B', borderRadius: 16,
+    margin: 16, marginBottom: 4, backgroundColor: '#1A1A1A', borderRadius: 16,
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12,
   },
   insightIcon: { fontSize: 20 },
   insightText: { color: '#fff', fontSize: responsiveFontSize(13), fontWeight: '700' },
-  insightSub: { color: '#94A3B8', fontSize: responsiveFontSize(11), fontWeight: '500', marginTop: 2 },
+  insightSub: { color: '#9C9C95', fontSize: responsiveFontSize(11), fontWeight: '500', marginTop: 2 },
   insightArrow: { color: COLORS.accent, fontSize: 24, fontWeight: '300' },
 
   section: { paddingLeft: 16, marginTop: 20, paddingRight: 0 },
@@ -633,8 +633,8 @@ const styles = StyleSheet.create({
   walletMiniIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' },
   walletMiniName: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '800' },
   walletMiniInner: { backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: 12 },
-  walletMiniBal: { fontSize: responsiveFontSize(16), fontWeight: '800', color: '#1E293B' },
-  walletMiniMulti: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#334155', marginBottom: 3 },
+  walletMiniBal: { fontSize: responsiveFontSize(16), fontWeight: '800', color: '#1A1A1A' },
+  walletMiniMulti: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#52525B', marginBottom: 3 },
   walletMiniPkr: { fontSize: responsiveFontSize(10), fontWeight: '700', color: COLORS.accentDark, marginTop: 4 },
 
   goalCard: {
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   goalIconBubble: { width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
   goalName: { fontSize: responsiveFontSize(14), fontWeight: '700', color: COLORS.text },
   goalSub: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '500', marginTop: 2, marginBottom: 8 },
-  goalBarBg: { height: 6, backgroundColor: '#E2E8F0', borderRadius: 3 },
+  goalBarBg: { height: 6, backgroundColor: '#ECECE6', borderRadius: 3 },
   goalBarFill: { height: 6, backgroundColor: COLORS.accent, borderRadius: 3 },
   goalCircle: { width: 50, height: 50, borderRadius: 25, borderWidth: 2.5, borderColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
   goalPct: { fontSize: responsiveFontSize(12), fontWeight: '800', color: COLORS.accentDark },
@@ -672,9 +672,9 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: responsiveFontSize(11), fontWeight: '600', marginBottom: 4 },
   summaryAmt: { fontSize: responsiveFontSize(14), fontWeight: '800' },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'flex-end' },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1', alignSelf: 'center', marginVertical: 10 },
-  notifSheet: { backgroundColor: '#F8FAFC', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 30 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(26,26,26,0.55)', justifyContent: 'flex-end' },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#ECECE6', alignSelf: 'center', marginVertical: 10 },
+  notifSheet: { backgroundColor: '#FAFAF7', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 30 },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 12 },
   notifTitle: { fontSize: responsiveFontSize(18), fontWeight: '800', color: COLORS.text },
   notifClose: { fontSize: responsiveFontSize(14), color: COLORS.primary, fontWeight: '700' },
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
   budgetTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   budgetType: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
   budgetNums: { fontSize: responsiveFontSize(12), fontWeight: '600', color: COLORS.textMed },
-  budgetBarBg: { height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden' },
+  budgetBarBg: { height: 8, backgroundColor: '#F5F5F0', borderRadius: 4, overflow: 'hidden' },
   budgetBarFill: { height: 8, borderRadius: 4 },
   budgetOver: { fontSize: responsiveFontSize(10), color: COLORS.danger, fontWeight: '700', marginTop: 4 },
 
@@ -706,14 +706,14 @@ const styles = StyleSheet.create({
   goalProjection: { fontSize: responsiveFontSize(10), color: COLORS.primary, fontWeight: '600', marginTop: 6 },
 
   recurRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
-  recurRowBorder: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  recurRowBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F0' },
   recurName: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
   recurAmt: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '600', marginTop: 1 },
-  recurPaid: { backgroundColor: '#D1FAE5', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  recurPaidText: { fontSize: responsiveFontSize(11), color: '#15803D', fontWeight: '700' },
+  recurPaid: { backgroundColor: '#FEF3C7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  recurPaidText: { fontSize: responsiveFontSize(11), color: '#D99E00', fontWeight: '700' },
   recurDue: { backgroundColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   recurDueText: { fontSize: responsiveFontSize(11), color: '#fff', fontWeight: '700' },
 
-  shareBtn: { marginTop: 14, marginRight: 16, backgroundColor: '#1E293B', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  shareBtn: { marginTop: 14, marginRight: 16, backgroundColor: '#1A1A1A', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   shareBtnText: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '700' },
 });

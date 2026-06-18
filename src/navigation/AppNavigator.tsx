@@ -27,7 +27,7 @@ function TabIcon({ icon, label, focused }: { icon: string; label: string; focuse
       <Text
         style={{
           fontSize: 10,
-          color: focused ? COLORS.primary : '#94A3B8',
+          color: focused ? COLORS.primary : '#9C9C95',
           fontWeight: focused ? '700' : '500',
           marginTop: 3,
         }}
@@ -51,7 +51,7 @@ function MainTabs() {
           paddingTop: 8,
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
+          borderTopColor: '#ECECE6',
           elevation: 8,
           shadowColor: '#000',
           shadowOpacity: 0.08,
@@ -137,7 +137,7 @@ function LinearLoadingScreen({ authLoading }: { authLoading: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, backgroundColor: '#F8FAFC' },
+  loader: { flex: 1, backgroundColor: '#FAFAF7' },
   loaderInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loaderIconBg: {
     width: 88,

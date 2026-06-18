@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   addBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 14 },
   alertsContainer: { marginBottom: 8 },
   alert: { backgroundColor: '#FEF3C7', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: COLORS.warning },
-  alertText: { fontSize: 12, color: '#92400E', fontWeight: '500' },
+  alertText: { fontSize: 12, color: '#1A1A1A', fontWeight: '500' },
   pendingBanner: { backgroundColor: COLORS.primary + '15', borderRadius: 10, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: COLORS.primary + '40' },
   pendingText: { color: COLORS.primary, fontWeight: '600', fontSize: 13 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginTop: 16, marginBottom: 10 },

@@ -44,7 +44,7 @@ const settingRowStyles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F5F5F0',
   },
   iconBg: {
     width: 38,
@@ -56,9 +56,9 @@ const settingRowStyles = StyleSheet.create({
   },
   icon: { fontSize: 19 },
   info: { flex: 1 },
-  label: { fontSize: responsiveFontSize(14), fontWeight: '600', color: '#1E293B' },
-  subtitle: { fontSize: responsiveFontSize(11), color: '#94A3B8', marginTop: 1, fontWeight: '500' },
-  chevron: { fontSize: 20, color: '#CBD5E1', marginLeft: 4 },
+  label: { fontSize: responsiveFontSize(14), fontWeight: '600', color: '#1A1A1A' },
+  subtitle: { fontSize: responsiveFontSize(11), color: '#9C9C95', marginTop: 1, fontWeight: '500' },
+  chevron: { fontSize: 20, color: '#ECECE6', marginLeft: 4 },
 });
 
 export default function SettingsScreen() {
@@ -135,7 +135,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             icon="👛"
-            iconBg="#E0F2FE"
+            iconBg="#F5F5F0"
             label="My Wallets"
             subtitle="Track balances across payment methods"
             onPress={() => navigation.navigate('Wallet')}
@@ -146,7 +146,7 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <SettingsRow
             icon="📑"
-            iconBg="#F0FDF4"
+            iconBg="#FFFDF5"
             label="Reports"
             subtitle="Export & share period summaries"
             onPress={() => navigation.navigate('Reports')}
@@ -164,7 +164,7 @@ export default function SettingsScreen() {
                 onChangeText={v => setRateInputs(prev => ({ ...prev, [c]: v }))}
                 keyboardType="numeric"
                 placeholder="Rate in PKR"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#9C9C95"
               />
               <Text style={styles.rateUnit}>PKR</Text>
             </View>
@@ -193,7 +193,7 @@ export default function SettingsScreen() {
                 onChangeText={val => setBudgetInputs(prev => ({ ...prev, [type]: val }))}
                 keyboardType="numeric"
                 placeholder="Set limit..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#9C9C95"
               />
               <TouchableOpacity style={styles.saveBudgetBtn} onPress={() => saveBudgetForType(type)}>
                 <Text style={styles.saveBudgetBtnText}>Save</Text>
@@ -208,7 +208,7 @@ export default function SettingsScreen() {
             <View style={styles.group}>
               <SettingsRow
                 icon="🔐"
-                iconBg="#FEE2E2"
+                iconBg="#F5F5F0"
                 label="Approval Mode"
                 subtitle="Require approval for Rehan's entries"
                 onPress={undefined}
@@ -216,7 +216,7 @@ export default function SettingsScreen() {
                   <Switch
                     value={approvalMode}
                     onValueChange={toggleApprovalMode}
-                    trackColor={{ true: COLORS.primary, false: '#CBD5E1' }}
+                    trackColor={{ true: COLORS.primary, false: '#ECECE6' }}
                     thumbColor="#fff"
                   />
                 }
@@ -228,7 +228,7 @@ export default function SettingsScreen() {
         <Text style={styles.groupLabel}>APP</Text>
         <View style={styles.group}>
           <View style={[settingRowStyles.row, { borderBottomWidth: 1 }]}>
-            <View style={[settingRowStyles.iconBg, { backgroundColor: '#F0FDF4' }]}>
+            <View style={[settingRowStyles.iconBg, { backgroundColor: '#FFFDF5' }]}>
               <Text style={settingRowStyles.icon}>📒</Text>
             </View>
             <View style={settingRowStyles.info}>
@@ -237,7 +237,7 @@ export default function SettingsScreen() {
             </View>
           </View>
           <View style={[settingRowStyles.row, { borderBottomWidth: 0 }]}>
-            <View style={[settingRowStyles.iconBg, { backgroundColor: '#FFF7ED' }]}>
+            <View style={[settingRowStyles.iconBg, { backgroundColor: '#FEF3C7' }]}>
               <Text style={settingRowStyles.icon}>👥</Text>
             </View>
             <View style={settingRowStyles.info}>
@@ -258,7 +258,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F8FAFC' },
+  root: { flex: 1, backgroundColor: '#FAFAF7' },
   profileHeader: {
     paddingHorizontal: 20,
     paddingTop: 16,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   groupLabel: {
     fontSize: responsiveFontSize(11),
     fontWeight: '700',
-    color: '#94A3B8',
+    color: '#9C9C95',
     letterSpacing: 0.8,
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F5F5F0',
     gap: 10,
   },
   budgetType: {
@@ -324,14 +324,14 @@ const styles = StyleSheet.create({
   },
   budgetInput: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF7',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontSize: responsiveFontSize(13),
-    color: '#1E293B',
+    color: '#1A1A1A',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#ECECE6',
   },
   saveBudgetBtn: {
     backgroundColor: COLORS.primary,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   logoutBtn: {
     margin: 16,
     marginTop: 24,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F5F5F0',
     borderRadius: 14,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -354,8 +354,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#ECECE6',
   },
   logoutIcon: { fontSize: 20 },
-  logoutText: { fontSize: responsiveFontSize(15), fontWeight: '700', color: '#DC2626' },
+  logoutText: { fontSize: responsiveFontSize(15), fontWeight: '700', color: '#1A1A1A' },
 });

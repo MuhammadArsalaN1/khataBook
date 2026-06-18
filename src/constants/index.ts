@@ -24,25 +24,25 @@ export const COLORS = {
   onAccent: '#1A1A1A',       // text on yellow
   secondary: '#CA8A04',      // gold (secondary accents)
   // Semantic
-  success: '#16A34A',
-  successLight: '#D1FAE5',
-  warning: '#F59E0B',
+  success: '#D99E00',
+  successLight: '#FEF3C7',
+  warning: '#F5B700',
   warningLight: '#FEF3C7',
-  danger: '#EF4444',
-  dangerLight: '#FEE2E2',
+  danger: '#1A1A1A',
+  dangerLight: '#F5F5F0',
   // Types
   personal: '#1A1A1A',
-  personalLight: '#E5E5E5',
-  personalBg: '#FAFAFA',
+  personalLight: '#ECECE6',
+  personalBg: '#FAFAF7',
   personalGradient: ['#3A3A3A', '#1A1A1A'],
   office: '#F5B700',
   officeLight: '#FEF3C7',
   officeBg: '#FFFDF5',
   officeGradient: ['#FACC15', '#F5B700'],
-  farm: '#16A34A',
-  farmLight: '#D1FAE5',
-  farmBg: '#F0FDF4',
-  farmGradient: ['#22C55E', '#16A34A'],
+  farm: '#D99E00',
+  farmLight: '#FEF3C7',
+  farmBg: '#FFFDF5',
+  farmGradient: ['#F5B700', '#D99E00'],
   // UI — soft white surfaces, rounded cards
   background: '#FAFAF7',
   card: '#FFFFFF',
@@ -62,10 +62,10 @@ export const COLORS = {
   shadow: 'rgba(0,0,0,0.08)',
   shadowDark: 'rgba(0,0,0,0.14)',
   // Chart palette — black/yellow led
-  chart: ['#1A1A1A','#F5B700','#16A34A','#EF4444','#CA8A04','#52525B','#FACC15','#84CC16'],
+  chart: ['#1A1A1A','#F5B700','#D99E00','#52525B','#FACC15','#9C9C95','#FDE68A','#B4B4AD'],
   // Gradient presets
-  incomeGradient: ['#22C55E', '#16A34A'],
-  expenseGradient: ['#F87171', '#EF4444'],
+  incomeGradient: ['#F5B700', '#D99E00'],
+  expenseGradient: ['#52525B', '#1A1A1A'],
   balanceGradient: ['#FACC15', '#F5B700'],
 };
 
@@ -119,12 +119,12 @@ export const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 export const PAYMENT_METHODS = {
-  cash: { label: 'Cash', icon: '💵', color: '#10B981' },
-  bank: { label: 'Bank Transfer', icon: '🏦', color: '#3B82F6' },
-  digital: { label: 'Digital', icon: '📱', color: '#8B5CF6' },
-  jazzcash: { label: 'JazzCash', icon: '📞', color: '#E52C2C' },
-  paypal: { label: 'PayPal', icon: '🌐', color: '#003087' },
-  payoneer: { label: 'Payoneer', icon: '💳', color: '#07A41E' },
+  cash: { label: 'Cash', icon: '💵', color: '#D99E00' },
+  bank: { label: 'Bank Transfer', icon: '🏦', color: '#1A1A1A' },
+  digital: { label: 'Digital', icon: '📱', color: '#D99E00' },
+  jazzcash: { label: 'JazzCash', icon: '📞', color: '#D99E00' },
+  paypal: { label: 'PayPal', icon: '🌐', color: '#1A1A1A' },
+  payoneer: { label: 'Payoneer', icon: '💳', color: '#D99E00' },
 };
 
 // Wallet providers with currency support + premium gradient styling.
@@ -145,11 +145,11 @@ export interface WalletMeta {
 
 // Brand-accurate gradients + wordmarks for the payment cards.
 export const WALLETS: WalletMeta[] = [
-  { id: 'cash',     name: 'Cash',     icon: '💵', lottie: 'cash',   brand: 'cash',     color: '#059669', gradient: ['#34D399', '#059669'], currencies: ['PKR'], agencies: ['Cash'] },
-  { id: 'bank',     name: 'Bank',     icon: '🏦', lottie: 'bank',   brand: 'bank',     color: '#2563EB', gradient: ['#60A5FA', '#1E40AF'], currencies: ['PKR'], agencies: ['Bank'] },
-  { id: 'jazzcash', name: 'JazzCash', icon: '📲', lottie: 'mobile', brand: 'jazzcash', color: '#ED1C24', gradient: ['#F0353C', '#B3151B'], currencies: ['PKR'], agencies: ['Main'] },
-  { id: 'paypal',   name: 'PayPal',   icon: '🅿️', lottie: 'paypal', brand: 'paypal',   color: '#0070BA', gradient: ['#009CDE', '#003087'], currencies: ['GBP', 'USD', 'EUR'], agencies: ['Hybrid'] },
-  { id: 'payoneer', name: 'Payoneer', icon: '💳', lottie: 'card',   brand: 'payoneer', color: '#FF4800', gradient: ['#FF7A00', '#E03E00'], currencies: ['USD', 'EUR', 'GBP'], agencies: ['Hybrid', 'ArsalanCo1', 'AlwaysDigital'] },
+  { id: 'cash',     name: 'Cash',     icon: '💵', lottie: 'cash',   brand: 'cash',     color: '#F5B700', gradient: ['#3A3A3A', '#1A1A1A'], currencies: ['PKR'], agencies: ['Cash'] },
+  { id: 'bank',     name: 'Bank',     icon: '🏦', lottie: 'bank',   brand: 'bank',     color: '#F5B700', gradient: ['#2E2E2E', '#1A1A1A'], currencies: ['PKR'], agencies: ['Bank'] },
+  { id: 'jazzcash', name: 'JazzCash', icon: '📲', lottie: 'mobile', brand: 'jazzcash', color: '#F5B700', gradient: ['#2A2A2A', '#111111'], currencies: ['PKR'], agencies: ['Main'] },
+  { id: 'paypal',   name: 'PayPal',   icon: '🅿️', lottie: 'paypal', brand: 'paypal',   color: '#F5B700', gradient: ['#2A2A2A', '#111111'], currencies: ['GBP', 'USD', 'EUR'], agencies: ['Hybrid'] },
+  { id: 'payoneer', name: 'Payoneer', icon: '💳', lottie: 'card',   brand: 'payoneer', color: '#F5B700', gradient: ['#3A3A3A', '#111111'], currencies: ['USD', 'EUR', 'GBP'], agencies: ['Hybrid', 'ArsalanCo1', 'AlwaysDigital'] },
 ];
 
 export const CURRENCIES: Record<Currency, { symbol: string; label: string; flag: string }> = {

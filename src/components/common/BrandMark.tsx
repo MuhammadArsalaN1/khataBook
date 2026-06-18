@@ -11,7 +11,7 @@ export default function BrandMark({ brand, size = 18 }: { brand: WalletBrand; si
     return (
       <Text style={[styles.italic, { fontSize: size }]}>
         <Text style={{ color: '#fff' }}>Pay</Text>
-        <Text style={{ color: '#CDEBFF' }}>Pal</Text>
+        <Text style={{ color: '#FACC15' }}>Pal</Text>
       </Text>
     );
   }
