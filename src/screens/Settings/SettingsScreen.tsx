@@ -8,8 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { useStore } from '../../store/useStore';
-import { COLORS, TYPE_LABELS, USERS } from '../../constants';
-import { ExpenseType } from '../../types';
+import { COLORS, TYPE_LABELS, USERS, CURRENCIES } from '../../constants';
+import { ExpenseType, Currency } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
 
 function SettingsRow({
@@ -63,7 +63,7 @@ const settingRowStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { currentUser, logout, approvalMode, toggleApprovalMode, budgets, saveBudget } = useStore();
+  const { currentUser, logout, approvalMode, toggleApprovalMode, budgets, saveBudget, exchangeRates, saveExchangeRates } = useStore();
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
@@ -82,6 +82,21 @@ export default function SettingsScreen() {
     if (isNaN(val) || val <= 0) { Alert.alert('Invalid', 'Enter a valid budget amount.'); return; }
     await saveBudget({ type, month, year, limit: val });
     Alert.alert('Saved', `${TYPE_LABELS[type]} budget set to Rs. ${val.toLocaleString()}`);
+  };
+
+  const FX: Currency[] = ['USD', 'EUR', 'GBP'];
+  const [rateInputs, setRateInputs] = useState<Record<string, string>>({
+    USD: String(exchangeRates.USD), EUR: String(exchangeRates.EUR), GBP: String(exchangeRates.GBP),
+  });
+  const saveRates = async () => {
+    const next = { ...exchangeRates };
+    for (const c of FX) {
+      const v = Number(rateInputs[c]);
+      if (isNaN(v) || v <= 0) { Alert.alert('Invalid', `Enter a valid ${c} rate.`); return; }
+      next[c] = v;
+    }
+    await saveExchangeRates(next);
+    Alert.alert('Saved', 'Exchange rates updated.');
   };
 
   return (
@@ -128,6 +143,38 @@ export default function SettingsScreen() {
         </View>
 
         <Text style={styles.groupLabel}>FINANCE</Text>
+        <View style={styles.group}>
+          <SettingsRow
+            icon="📑"
+            iconBg="#F0FDF4"
+            label="Reports"
+            subtitle="Export & share period summaries"
+            onPress={() => navigation.navigate('Reports')}
+          />
+        </View>
+
+        <Text style={styles.groupLabel}>EXCHANGE RATES (→ PKR)</Text>
+        <View style={styles.group}>
+          {FX.map((c, idx) => (
+            <View key={c} style={[styles.budgetInputRow, idx === FX.length - 1 && { borderBottomWidth: 0 }]}>
+              <Text style={styles.budgetType}>{CURRENCIES[c].flag} 1 {c}</Text>
+              <TextInput
+                style={styles.budgetInput}
+                value={rateInputs[c]}
+                onChangeText={v => setRateInputs(prev => ({ ...prev, [c]: v }))}
+                keyboardType="numeric"
+                placeholder="Rate in PKR"
+                placeholderTextColor="#94A3B8"
+              />
+              <Text style={styles.rateUnit}>PKR</Text>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.ratesSaveBtn} onPress={saveRates}>
+            <Text style={styles.ratesSaveBtnText}>Save Rates</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.groupLabel}>BUDGETS</Text>
         <View style={styles.group}>
           <SettingsRow
             icon="📊"
@@ -293,6 +340,9 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   saveBudgetBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(12) },
+  rateUnit: { fontSize: responsiveFontSize(12), fontWeight: '700', color: COLORS.textLight, width: 36 },
+  ratesSaveBtn: { backgroundColor: COLORS.primary, margin: 12, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  ratesSaveBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(13) },
   logoutBtn: {
     margin: 16,
     marginTop: 24,

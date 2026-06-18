@@ -13,6 +13,8 @@ import {
 import { generateInsightReport, detectRecurringPatterns } from '../../utils/advancedAnalytics';
 import { ExpenseType } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
+import { toPKR, formatPKRCompact } from '../../utils/currency';
+import DonutChart from '../../components/charts/DonutChart';
 
 const W = Dimensions.get('window').width;
 
@@ -101,7 +103,7 @@ const iec = StyleSheet.create({
 });
 
 export default function AnalyticsScreen() {
-  const { expenses, incomes, wallets } = useStore();
+  const { expenses, incomes, wallets, exchangeRates } = useStore();
   const [tab, setTab] = useState<TabType>('6months');
   const [period] = useState<6>(6);
 
@@ -133,11 +135,13 @@ export default function AnalyticsScreen() {
   const totalUser = USERS.reduce((s, u) => s + (userContrib[u.id] ?? 0), 0);
 
   const currentWallets = useMemo(
-    () => wallets.filter(w => w.month === month && w.year === year),
-    [wallets, month, year]
+    () => wallets
+      .filter(w => w.month === month && w.year === year)
+      .map(w => ({ ...w, pkr: toPKR(w.balance, w.currency ?? 'PKR', exchangeRates) })),
+    [wallets, month, year, exchangeRates]
   );
-  const maxWallet = Math.max(...currentWallets.map(w => w.balance), 1);
-  const totalWallet = currentWallets.reduce((s, w) => s + w.balance, 0);
+  const maxWallet = Math.max(...currentWallets.map(w => w.pkr), 1);
+  const totalWallet = currentWallets.reduce((s, w) => s + w.pkr, 0);
 
   const TABS: { id: TabType; label: string }[] = [
     { id: '6months', label: '6 Months' },
@@ -252,6 +256,16 @@ export default function AnalyticsScreen() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Category Breakdown</Text>
             <Text style={styles.cardSub}>All time · {catBreakdown.length} categories</Text>
+            {catBreakdown.length > 0 && (
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <DonutChart
+                  size={150} strokeWidth={26}
+                  data={catBreakdown.map((c, i) => ({ label: c.category, value: c.amount, color: CAT_COLORS[i % CAT_COLORS.length] }))}
+                  centerLabel={formatPKRCompact(totalCat).replace('Rs. ', '')}
+                  centerSub="total spent"
+                />
+              </View>
+            )}
             {catBreakdown.map((c, i) => (
               <BarRow
                 key={i}
@@ -300,8 +314,8 @@ export default function AnalyticsScreen() {
               currentWallets.map((w, i) => (
                 <BarRow
                   key={w.id}
-                  label={w.provider}
-                  value={w.balance}
+                  label={`${w.provider} (${w.currency})`}
+                  value={w.pkr}
                   max={maxWallet}
                   total={totalWallet}
                   color={CAT_COLORS[i % CAT_COLORS.length]}
