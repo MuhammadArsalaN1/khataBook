@@ -190,8 +190,13 @@ export default function DashboardScreenPremium() {
 
           {/* Balance */}
           <View style={styles.balanceSection}>
-            <Text style={styles.balanceLabel}>{isPositive ? 'Available Balance' : 'Over Budget'}</Text>
-            <Text style={styles.balanceAmount}>{formatMoney(Math.abs(balance))}</Text>
+            <Text style={styles.balanceLabel}>{isPositive ? 'Available Balance' : 'Negative Balance'}</Text>
+            <Text style={[styles.balanceAmount, !isPositive && styles.balanceNegative]}>
+              {isPositive ? '' : '− '}{formatMoney(Math.abs(balance))}
+            </Text>
+            {!isPositive && (
+              <Text style={styles.overBudgetNote}>Expenses exceed income by {formatMoney(Math.abs(balance))}</Text>
+            )}
             <View style={styles.balanceMetaRow}>
               <View style={styles.fiscalPill}>
                 <Text style={styles.fiscalPillText}>📅 {fiscal.label}</Text>
@@ -641,6 +646,8 @@ const styles = StyleSheet.create({
   balanceSection: { alignItems: 'center', marginBottom: 20 },
   balanceLabel: { color: 'rgba(26,26,26,0.65)', fontSize: responsiveFontSize(13), fontWeight: '600', marginBottom: 6 },
   balanceAmount: { color: '#1A1A1A', fontSize: responsiveFontSize(36), fontWeight: '800', letterSpacing: -0.5 },
+  balanceNegative: { color: '#1A1A1A' },
+  overBudgetNote: { color: '#1A1A1A', fontSize: responsiveFontSize(11), fontWeight: '700', marginTop: 4, backgroundColor: 'rgba(255,255,255,0.6)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, overflow: 'hidden' },
   balanceMetaRow: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' },
   fiscalPill: {
     backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
