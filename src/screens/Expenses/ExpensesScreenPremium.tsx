@@ -12,6 +12,7 @@ import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney } from '../../utils/currency';
 import { getActiveFiscalMonth } from '../../utils/fiscalMonth';
 import DonutChart from '../../components/charts/DonutChart';
+import DrillDownModal from '../../components/common/DrillDownModal';
 
 const STATUS_COLORS: Record<ExpenseStatus, string> = {
   draft: COLORS.textLight, pending: COLORS.warning, approved: COLORS.success, rejected: COLORS.danger,
@@ -29,6 +30,7 @@ export default function ExpensesScreenPremium() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<ExpenseType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<ExpenseStatus | 'all'>(route.params?.filter ?? 'all');
+  const [drill, setDrill] = useState<{ title: string; color: string; entries: Expense[] } | null>(null);
 
   // Scope expenses to active fiscal month (resets monthly) or all-time
   const scoped = useMemo(() => {
@@ -145,6 +147,7 @@ export default function ExpensesScreenPremium() {
           {/* Donut by type */}
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>By Type</Text>
+            <Text style={styles.chartHint}>Tap a row to see day-by-day detail</Text>
             <View style={styles.donutRow}>
               <DonutChart
                 size={140} strokeWidth={24}
@@ -158,11 +161,13 @@ export default function ExpensesScreenPremium() {
               />
               <View style={styles.legend}>
                 {(['personal', 'office', 'farm'] as ExpenseType[]).map(t => (
-                  <View key={t} style={styles.legendRow}>
+                  <TouchableOpacity key={t} style={styles.legendRow} activeOpacity={0.6}
+                    onPress={() => setDrill({ title: TYPE_LABELS[t], color: TYPE_COLORS[t], entries: valid.filter(e => e.type === t) })}>
                     <View style={[styles.legendDot, { backgroundColor: TYPE_COLORS[t] }]} />
                     <Text style={styles.legendLabel}>{TYPE_LABELS[t]}</Text>
                     <Text style={styles.legendVal}>{formatMoney(byType[t])}</Text>
-                  </View>
+                    <Text style={styles.legendChevron}>›</Text>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -183,11 +188,13 @@ export default function ExpensesScreenPremium() {
                 />
                 <View style={styles.legend}>
                   {byCategory.slice(0, 6).map((c, i) => (
-                    <View key={c.category} style={styles.legendRow}>
+                    <TouchableOpacity key={c.category} style={styles.legendRow} activeOpacity={0.6}
+                      onPress={() => setDrill({ title: c.category, color: CAT_PALETTE[i % CAT_PALETTE.length], entries: valid.filter(e => e.category === c.category) })}>
                       <View style={[styles.legendDot, { backgroundColor: CAT_PALETTE[i % CAT_PALETTE.length] }]} />
                       <Text style={styles.legendLabel} numberOfLines={1}>{c.category}</Text>
                       <Text style={styles.legendVal}>{total > 0 ? Math.round((c.amount / total) * 100) : 0}%</Text>
-                    </View>
+                      <Text style={styles.legendChevron}>›</Text>
+                    </TouchableOpacity>
                   ))}
                 </View>
               </View>
@@ -255,6 +262,14 @@ export default function ExpensesScreenPremium() {
           <View style={styles.empty}><Text style={{ fontSize: 44 }}>📭</Text><Text style={styles.emptyText}>No expenses found</Text></View>
         ) : null}
       />
+
+      <DrillDownModal
+        visible={!!drill}
+        onClose={() => setDrill(null)}
+        title={drill?.title ?? ''}
+        color={drill?.color}
+        entries={drill?.entries ?? []}
+      />
     </SafeAreaView>
   );
 }
@@ -277,7 +292,9 @@ const styles = StyleSheet.create({
   scopeText: { fontSize: responsiveFontSize(12), fontWeight: '600', color: COLORS.textMed },
   scopeTextActive: { color: '#fff', fontWeight: '700' },
   chartCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  chartTitle: { fontSize: responsiveFontSize(15), fontWeight: '700', color: COLORS.text, marginBottom: 14 },
+  chartTitle: { fontSize: responsiveFontSize(15), fontWeight: '700', color: COLORS.text, marginBottom: 4 },
+  chartHint: { fontSize: responsiveFontSize(11), color: COLORS.accentDark, fontWeight: '600', marginBottom: 14 },
+  legendChevron: { fontSize: 18, color: COLORS.textLight, marginLeft: 4 },
   donutRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   legend: { flex: 1, gap: 8 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
