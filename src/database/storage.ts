@@ -8,7 +8,7 @@ import {
   serverTimestamp, getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate } from '../types';
+import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate, Advance } from '../types';
 
 // ── Collection refs ──────────────────────────────────────────────────────────
 export const expensesCol = () => collection(db, 'expenses');
@@ -110,4 +110,18 @@ export const deleteTemplateDoc = (id: string) =>
 export const subscribeTemplates = (cb: (data: ExpenseTemplate[]) => void): Unsubscribe =>
   onSnapshot(templatesCol(), snap =>
     cb(snap.docs.map(d => d.data() as ExpenseTemplate))
+  );
+
+// ── Advances (float given to a person, spent against) ─────────────────────────
+export const advancesCol = () => collection(db, 'advances');
+
+export const upsertAdvanceDoc = (advance: Advance) =>
+  setDoc(doc(db, 'advances', advance.id), advance);
+
+export const deleteAdvanceDoc = (id: string) =>
+  deleteDoc(doc(db, 'advances', id));
+
+export const subscribeAdvances = (cb: (data: Advance[]) => void): Unsubscribe =>
+  onSnapshot(advancesCol(), snap =>
+    cb(snap.docs.map(d => d.data() as Advance))
   );

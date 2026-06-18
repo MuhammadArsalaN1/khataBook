@@ -33,6 +33,23 @@ export interface Expense {
   isRecurring: boolean;
   recurringMonths?: number[];
   tags?: string[];
+  advanceId?: string;   // if paid from an advance/float; '' or absent = main funds
+}
+
+export type AdvanceDirection = 'given' | 'received';
+
+export interface Advance {
+  id: string;
+  direction: AdvanceDirection; // 'given' = money you gave out; 'received' = money you borrowed
+  person: string;              // free-text person name (e.g. "Ali", "Ahmed")
+  amount: number;
+  date: string;
+  notes?: string;
+  status: 'active' | 'settled';
+  returnedAmount?: number;     // cash returned at settlement
+  createdBy: string;           // app user id who recorded it
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ActivityLog {

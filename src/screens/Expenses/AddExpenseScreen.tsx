@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Switch, Modal,
@@ -12,6 +12,7 @@ import { ExpenseType, PaymentMethod, Expense } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import { responsiveFontSize } from '../../utils/responsive';
 import NumberPad from '../../components/common/NumberPad';
+import { withBalance } from '../../utils/funds';
 import * as ImagePicker from 'expo-image-picker';
 
 const TYPES: ExpenseType[] = ['personal', 'office', 'farm'];
@@ -20,7 +21,7 @@ const PAYMENTS: PaymentMethod[] = ['cash', 'bank', 'jazzcash', 'digital', 'paypa
 export default function AddExpenseScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { currentUser, addExpense, editExpense, approvalMode, expenses } = useStore();
+  const { currentUser, addExpense, editExpense, approvalMode, expenses, advances } = useStore();
 
   const editing: Expense | undefined = route.params?.expenseId
     ? expenses.find(e => e.id === route.params.expenseId) : undefined;
@@ -35,12 +36,35 @@ export default function AddExpenseScreen() {
   const [receiptUri, setReceiptUri] = useState(editing?.receiptUri ?? '');
   const [saving, setSaving] = useState(false);
   const [padOpen, setPadOpen] = useState(false);
+  const [advanceId, setAdvanceId] = useState(editing?.advanceId ?? '');
 
   const isApproved = editing?.status === 'approved';
+
+  // Active advances usable as a fund source (remaining > 0), plus the one being edited
+  const sources = useMemo(() =>
+    advances
+      .filter(a => a.status === 'active')
+      .map(a => withBalance(a, expenses.filter(e => e.id !== editing?.id)))
+      .filter(a => a.remaining > 0 || a.id === editing?.advanceId),
+    [advances, expenses, editing]
+  );
+  const selectedSource = sources.find(s => s.id === advanceId);
 
   const pickReceipt = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
     if (!result.canceled) setReceiptUri(result.assets[0].uri);
+  };
+
+  const persist = async (num: number, sourceId: string) => {
+    setSaving(true);
+    const status = approvalMode && currentUser?.role !== 'admin' ? 'pending' : (editing?.status ?? 'approved');
+    if (editing) {
+      await editExpense(editing.id, { type, category, amount: num, date, notes, paymentMethod: payment, isRecurring, receiptUri, advanceId: sourceId });
+    } else {
+      await addExpense({ type, category, amount: num, date, notes, paymentMethod: payment, enteredBy: currentUser!.id, status, isRecurring, receiptUri, advanceId: sourceId });
+    }
+    setSaving(false);
+    navigation.goBack();
   };
 
   const handleSave = async () => {
@@ -49,15 +73,19 @@ export default function AddExpenseScreen() {
     if (!amount || isNaN(num) || num <= 0) { Alert.alert('Missing', 'Please enter a valid amount.'); return; }
     if (currentUser?.role !== 'admin' && isApproved) { Alert.alert('Locked', 'Approved entries cannot be edited.'); return; }
 
-    setSaving(true);
-    const status = approvalMode && currentUser?.role !== 'admin' ? 'pending' : (editing?.status ?? 'approved');
-    if (editing) {
-      await editExpense(editing.id, { type, category, amount: num, date, notes, paymentMethod: payment, isRecurring, receiptUri });
-    } else {
-      await addExpense({ type, category, amount: num, date, notes, paymentMethod: payment, enteredBy: currentUser!.id, status, isRecurring, receiptUri });
+    // Balance validation when paying from an advance (Feature 4)
+    if (selectedSource && num > selectedSource.remaining) {
+      Alert.alert(
+        'Insufficient Advance Balance',
+        `${selectedSource.person} advance has only ${formatMoney(selectedSource.remaining)} left, but this entry is ${formatMoney(num)}.\n\nShortfall: ${formatMoney(num - selectedSource.remaining)}`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Use Main Balance', onPress: () => { setAdvanceId(''); persist(num, ''); } },
+        ]
+      );
+      return;
     }
-    setSaving(false);
-    navigation.goBack();
+    await persist(num, advanceId);
   };
 
   return (
@@ -106,6 +134,27 @@ export default function AddExpenseScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Fund source — where is this money coming from? */}
+        {sources.length > 0 && (
+          <>
+            <Text style={styles.label}>Where is this money coming from?</Text>
+            <View style={styles.categoryGrid}>
+              <TouchableOpacity style={[styles.payChip, advanceId === '' && styles.payChipActive]} onPress={() => setAdvanceId('')}>
+                <Text style={styles.catEmoji}>🏦</Text>
+                <Text style={[styles.catChipText, advanceId === '' && styles.catChipTextActive]}>Main Balance</Text>
+              </TouchableOpacity>
+              {sources.map(s => (
+                <TouchableOpacity key={s.id} style={[styles.payChip, advanceId === s.id && styles.payChipActive]} onPress={() => setAdvanceId(s.id)}>
+                  <Text style={styles.catEmoji}>{s.direction === 'given' ? '🤝' : '📥'}</Text>
+                  <Text style={[styles.catChipText, advanceId === s.id && styles.catChipTextActive]}>
+                    {s.person} · {formatMoney(s.remaining)} left
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={styles.label}>Date</Text>
         <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="yyyy-MM-dd" placeholderTextColor={COLORS.textLight} />

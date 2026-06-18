@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<ExpenseStatus, string> = {
 const CAT_PALETTE = COLORS.chart;
 
 export default function ExpensesScreenPremium() {
-  const { expenses, currentUser, deleteExpense, approveExpense } = useStore();
+  const { expenses, currentUser, deleteExpense, approveExpense, advances } = useStore();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
@@ -100,6 +100,11 @@ export default function ExpensesScreenPremium() {
             </View>
           </View>
         </View>
+        {item.advanceId ? (
+          <Text style={styles.sourceBadge}>
+            🤝 From {advances.find(a => a.id === item.advanceId)?.person ?? 'advance'}
+          </Text>
+        ) : null}
         {item.notes ? <Text style={styles.cardNotes}>📝 {item.notes}</Text> : null}
         {(canEdit || (currentUser?.role === 'admin' && item.status === 'pending')) && (
           <View style={styles.actions}>
@@ -319,6 +324,7 @@ const styles = StyleSheet.create({
   statusBadge: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   statusText: { fontSize: responsiveFontSize(9), fontWeight: '700' },
   cardNotes: { fontSize: responsiveFontSize(12), color: COLORS.textMed, marginTop: 10, fontWeight: '500' },
+  sourceBadge: { fontSize: responsiveFontSize(11), color: COLORS.accentDark, fontWeight: '700', marginTop: 8 },
   actions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: COLORS.divider, marginTop: 12, paddingTop: 4 },
   actionBtn: { flex: 1, paddingVertical: 8, alignItems: 'center' },
   actionText: { fontSize: responsiveFontSize(12), fontWeight: '700' },

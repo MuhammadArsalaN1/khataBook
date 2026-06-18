@@ -140,6 +140,13 @@ export default function SettingsScreen() {
             subtitle="Track balances across payment methods"
             onPress={() => navigation.navigate('Wallet')}
           />
+          <SettingsRow
+            icon="🤝"
+            iconBg="#FEF3C7"
+            label="Funds & Advances"
+            subtitle="Money given / received & fund sources"
+            onPress={() => navigation.navigate('Funds')}
+          />
         </View>
 
         <Text style={styles.groupLabel}>FINANCE</Text>

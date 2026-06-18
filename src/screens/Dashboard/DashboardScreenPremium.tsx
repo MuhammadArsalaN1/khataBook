@@ -13,6 +13,7 @@ import { ExpenseType } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
 import { getActiveFiscalMonth, getResetCountdown, Countdown } from '../../utils/fiscalMonth';
+import { fundsSummary } from '../../utils/funds';
 import AnimatedIcon from '../../components/common/AnimatedIcon';
 import BrandMark from '../../components/common/BrandMark';
 
@@ -31,7 +32,7 @@ function useCountdown(): Countdown {
 }
 
 export default function DashboardScreenPremium() {
-  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets, approveExpense, approveIncome } = useStore();
+  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets, approveExpense, approveIncome, advances } = useStore();
   const navigation = useNavigation<any>();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -72,6 +73,8 @@ export default function DashboardScreenPremium() {
   }, [wallets, currentUser, month, year, exchangeRates]);
 
   const totalLiquid = useMemo(() => walletData.reduce((s, w) => s + w.pkr, 0), [walletData]);
+
+  const funds = useMemo(() => fundsSummary(incomes, expenses, advances), [incomes, expenses, advances]);
 
   // 5 latest transactions, most recent first
   const recent = useMemo(
@@ -311,6 +314,34 @@ export default function DashboardScreenPremium() {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        {/* Funds & Advances */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Funds & Advances</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Funds')}>
+              <Text style={styles.seeAll}>Manage ›</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.fundsCard} activeOpacity={0.85} onPress={() => navigation.navigate('Funds')}>
+            <View style={styles.fundsTop}>
+              <View>
+                <Text style={styles.fundsMainLabel}>Main Balance</Text>
+                <Text style={styles.fundsMainAmt}>
+                  {funds.mainBalance < 0 ? '− ' : ''}{formatMoney(Math.abs(funds.mainBalance))}
+                </Text>
+              </View>
+              <View style={styles.fundsActivePill}>
+                <Text style={styles.fundsActivePillText}>{funds.activeCount} active</Text>
+              </View>
+            </View>
+            <View style={styles.fundsStatRow}>
+              <View style={styles.fundsStat}><Text style={styles.fundsStatLabel}>Given out</Text><Text style={styles.fundsStatVal}>{formatPKRCompact(funds.totalGiven)}</Text></View>
+              <View style={styles.fundsStat}><Text style={styles.fundsStatLabel}>Received</Text><Text style={styles.fundsStatVal}>{formatPKRCompact(funds.totalReceived)}</Text></View>
+              <View style={styles.fundsStat}><Text style={styles.fundsStatLabel}>Outstanding</Text><Text style={styles.fundsStatVal}>{formatPKRCompact(funds.outstanding)}</Text></View>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Budget vs Actual */}
@@ -776,6 +807,16 @@ const styles = StyleSheet.create({
   shareBtn: { marginTop: 14, marginRight: 16, backgroundColor: '#1A1A1A', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   shareBtnText: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '700' },
 
+  fundsCard: { backgroundColor: COLORS.card, borderRadius: 16, padding: 16, marginRight: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  fundsTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  fundsMainLabel: { fontSize: responsiveFontSize(12), color: COLORS.textLight, fontWeight: '600' },
+  fundsMainAmt: { fontSize: responsiveFontSize(22), color: COLORS.text, fontWeight: '800', marginTop: 2 },
+  fundsActivePill: { backgroundColor: COLORS.accentSoft, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  fundsActivePillText: { fontSize: responsiveFontSize(11), color: COLORS.accentDark, fontWeight: '700' },
+  fundsStatRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: COLORS.divider, paddingTop: 12 },
+  fundsStat: { alignItems: 'flex-start' },
+  fundsStatLabel: { fontSize: responsiveFontSize(10), color: COLORS.textLight, fontWeight: '600' },
+  fundsStatVal: { fontSize: responsiveFontSize(13), color: COLORS.text, fontWeight: '800', marginTop: 2 },
   approvalBadge: { backgroundColor: COLORS.accent, borderRadius: 12, minWidth: 24, paddingHorizontal: 8, paddingVertical: 2, alignItems: 'center' },
   approvalBadgeText: { color: '#1A1A1A', fontWeight: '800', fontSize: responsiveFontSize(12) },
   approvalCard: { backgroundColor: COLORS.card, borderRadius: 14, padding: 14, marginBottom: 10, marginRight: 16, borderLeftWidth: 4, borderLeftColor: COLORS.accent, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },

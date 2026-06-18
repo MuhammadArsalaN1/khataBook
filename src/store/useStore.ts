@@ -8,8 +8,9 @@ import {
   subscribeExpenses, subscribeLogs, subscribeBudgets, subscribeIncomes, subscribeWallets, subscribeSavingsGoals, subscribeTemplates,
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
   addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, upsertSavingsGoalDoc, deleteSavingsGoalDoc, upsertTemplateDoc, deleteTemplateDoc, saveSettings, getSettings,
+  subscribeAdvances, upsertAdvanceDoc, deleteAdvanceDoc,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance } from '../types';
 import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
 import { ExchangeRates } from '../utils/currency';
 import { saveCredentials, getCredentials, clearCredentials, promptBiometric } from '../utils/biometric';
@@ -23,6 +24,7 @@ interface AppState {
   wallets: Wallet[];
   savingsGoals: SavingsGoal[];
   templates: ExpenseTemplate[];
+  advances: Advance[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
@@ -40,6 +42,7 @@ let state: AppState = {
   wallets: [],
   savingsGoals: [],
   templates: [],
+  advances: [],
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
@@ -62,6 +65,7 @@ let unsubIncomes: (() => void) | null = null;
 let unsubWallets: (() => void) | null = null;
 let unsubSavingsGoals: (() => void) | null = null;
 let unsubTemplates: (() => void) | null = null;
+let unsubAdvances: (() => void) | null = null;
 
 function startListeners() {
   unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
@@ -71,6 +75,7 @@ function startListeners() {
   unsubWallets = subscribeWallets(wallets => setState({ wallets }));
   unsubSavingsGoals = subscribeSavingsGoals(savingsGoals => setState({ savingsGoals }));
   unsubTemplates = subscribeTemplates(templates => setState({ templates }));
+  unsubAdvances = subscribeAdvances(advances => setState({ advances }));
 }
 
 function stopListeners() {
@@ -81,6 +86,7 @@ function stopListeners() {
   unsubWallets?.();  unsubWallets = null;
   unsubSavingsGoals?.(); unsubSavingsGoals = null;
   unsubTemplates?.(); unsubTemplates = null;
+  unsubAdvances?.(); unsubAdvances = null;
 }
 
 // ── Firebase Auth observer ────────────────────────────────────────────────────
@@ -109,6 +115,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       wallets: [],
       savingsGoals: [],
       templates: [],
+      advances: [],
       authLoading: false,
       dataLoading: false,
       authError: null,
@@ -321,6 +328,51 @@ export function useStore() {
     await deleteTemplateDoc(id);
   }, []);
 
+  // ── Advances / Funds ─────────────────────────────────────────────────────────
+  const saveAdvance = useCallback(async (data: { direction: Advance['direction']; person: string; amount: number; date: string; notes?: string }) => {
+    const id = `adv_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const now = new Date().toISOString();
+    const doc: Advance = {
+      id, direction: data.direction, person: data.person.trim(), amount: data.amount,
+      date: data.date, notes: data.notes ?? '', status: 'active', returnedAmount: 0,
+      createdBy: state.currentUser?.id ?? '', createdAt: now, updatedAt: now,
+    };
+    await upsertAdvanceDoc(doc);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'add',
+      expenseId: id,
+      details: data.direction === 'given'
+        ? `Gave advance of Rs. ${data.amount.toLocaleString()} to ${doc.person}`
+        : `Received advance of Rs. ${data.amount.toLocaleString()} from ${doc.person}`,
+    });
+  }, []);
+
+  // Settle an advance. returnedAmount = cash moved back to Main (0 for "mark consumed").
+  const settleAdvance = useCallback(async (id: string, returnedAmount: number) => {
+    const adv = state.advances.find(a => a.id === id);
+    if (!adv) return;
+    await upsertAdvanceDoc({ ...adv, status: 'settled', returnedAmount, updatedAt: new Date().toISOString() });
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'edit',
+      expenseId: id,
+      details: `Settled ${adv.direction} advance with ${adv.person}${returnedAmount > 0 ? ` (Rs. ${returnedAmount.toLocaleString()} returned)` : ''}`,
+    });
+  }, []);
+
+  const reopenAdvance = useCallback(async (id: string) => {
+    const adv = state.advances.find(a => a.id === id);
+    if (!adv) return;
+    await upsertAdvanceDoc({ ...adv, status: 'active', returnedAmount: 0, updatedAt: new Date().toISOString() });
+  }, []);
+
+  const deleteAdvance = useCallback(async (id: string) => {
+    await deleteAdvanceDoc(id);
+  }, []);
+
   return {
     ...state,
     loading: state.authLoading || state.dataLoading,
@@ -342,5 +394,9 @@ export function useStore() {
     deleteSavingsGoal,
     saveTemplate,
     deleteTemplate,
+    saveAdvance,
+    settleAdvance,
+    reopenAdvance,
+    deleteAdvance,
   };
 }
