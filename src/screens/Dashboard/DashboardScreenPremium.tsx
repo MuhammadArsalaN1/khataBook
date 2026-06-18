@@ -1,14 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Dimensions, StatusBar, Modal,
+  Dimensions, StatusBar, Modal, Share,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { format } from 'date-fns';
+import { format, subMonths, addMonths } from 'date-fns';
 import { useStore } from '../../store/useStore';
-import { COLORS, USERS, WALLETS, CURRENCIES, CATEGORY_EMOJI } from '../../constants';
+import { COLORS, USERS, WALLETS, CURRENCIES, CATEGORY_EMOJI, TYPE_LABELS } from '../../constants';
 import { ExpenseType } from '../../types';
 import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
@@ -31,7 +31,7 @@ function useCountdown(): Countdown {
 }
 
 export default function DashboardScreenPremium() {
-  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates } = useStore();
+  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets } = useStore();
   const navigation = useNavigation<any>();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -81,6 +81,61 @@ export default function DashboardScreenPremium() {
     }).slice(0, 5),
     [expenses]
   );
+
+  // Budget vs actual (per type, fiscal month)
+  const budgetData = useMemo(() =>
+    (['personal', 'office', 'farm'] as ExpenseType[]).map(t => {
+      const b = budgets.find(x => x.type === t && x.month === month && x.year === year);
+      const spent = fiscalExpenses.filter(e => e.type === t).reduce((s, e) => s + e.amount, 0);
+      return { type: t, limit: b?.limit ?? 0, spent };
+    }), [budgets, fiscalExpenses, month, year]);
+  const hasBudgets = budgetData.some(b => b.limit > 0);
+
+  // 6-month income vs expense trend + net worth trend
+  const trend = useMemo(() => {
+    const arr: { label: string; inc: number; exp: number; nw: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(now, i);
+      const m = d.getMonth() + 1, y = d.getFullYear();
+      const exp = expenses.filter(e => { const dd = new Date(e.date); return dd.getMonth() + 1 === m && dd.getFullYear() === y && e.status !== 'rejected'; }).reduce((s, e) => s + e.amount, 0);
+      const inc = incomes.filter((x: any) => x.month === m && x.year === y).reduce((s: number, x: any) => s + x.amount, 0);
+      const nw = wallets.filter(w => w.userId === currentUser?.id && w.month === m && w.year === y).reduce((s, w) => s + toPKR(w.balance, w.currency ?? 'PKR', exchangeRates), 0);
+      arr.push({ label: format(d, 'MMM'), inc, exp, nw });
+    }
+    return arr;
+  }, [expenses, incomes, wallets, currentUser, exchangeRates]);
+  const trendMax = Math.max(...trend.flatMap(t => [t.inc, t.exp]), 1);
+  const nwMax = Math.max(...trend.map(t => t.nw), 1);
+
+  // Spending by person (fiscal month)
+  const byPerson = useMemo(() =>
+    USERS.map(u => ({ user: u, total: fiscalExpenses.filter(e => e.enteredBy === u.id).reduce((s, e) => s + e.amount, 0) })),
+    [fiscalExpenses]);
+  const personTotal = byPerson.reduce((s, p) => s + p.total, 0);
+
+  // Recurring bills (distinct by category), flag if already logged this fiscal month
+  const recurring = useMemo(() => {
+    const map = new Map<string, any>();
+    expenses.filter(e => e.isRecurring).forEach(e => { if (!map.has(e.category)) map.set(e.category, e); });
+    return Array.from(map.values()).map(e => ({
+      ...e,
+      loggedThisMonth: fiscalExpenses.some(x => x.category === e.category),
+    }));
+  }, [expenses, fiscalExpenses]);
+
+  const shareReport = async () => {
+    const top = [...fiscalExpenses].sort((a, b) => b.amount - a.amount).slice(0, 5);
+    let t = `📒 KHATA BOOK — ${fiscal.label}\n${'─'.repeat(28)}\n`;
+    t += `Income:   ${formatMoney(totalIncome)}\n`;
+    t += `Expenses: ${formatMoney(totalSpent)}\n`;
+    t += `Balance:  ${formatMoney(balance)} ${isPositive ? '✅' : '⚠️'}\n`;
+    t += `Liquid Assets: ${formatPKRCompact(totalLiquid)}\n\n`;
+    t += `By person:\n`;
+    byPerson.forEach(p => { t += `  • ${p.user.name}: ${formatMoney(p.total)}\n`; });
+    t += `\nTop expenses:\n`;
+    top.forEach(e => { t += `  • ${e.category}: ${formatMoney(e.amount)}\n`; });
+    await Share.share({ message: t });
+  };
 
   // Notifications: pending approvals (admin) + latest activity
   const pendingCount = useMemo(() => expenses.filter(e => e.status === 'pending').length, [expenses]);
@@ -201,6 +256,39 @@ export default function DashboardScreenPremium() {
           </View>
         </View>
 
+        {/* Budget vs Actual */}
+        {hasBudgets && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Budget vs Actual</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+                <Text style={styles.seeAll}>Edit ›</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.plainCard}>
+              {budgetData.filter(b => b.limit > 0).map(b => {
+                const pct = b.limit > 0 ? b.spent / b.limit : 0;
+                const over = pct > 1;
+                const barColor = over ? COLORS.danger : pct > 0.8 ? COLORS.warning : COLORS.success;
+                return (
+                  <View key={b.type} style={styles.budgetRow}>
+                    <View style={styles.budgetTop}>
+                      <Text style={styles.budgetType}>{TYPE_LABELS[b.type]}</Text>
+                      <Text style={[styles.budgetNums, over && { color: COLORS.danger }]}>
+                        {formatMoney(b.spent)} / {formatMoney(b.limit)}
+                      </Text>
+                    </View>
+                    <View style={styles.budgetBarBg}>
+                      <View style={[styles.budgetBarFill, { width: `${Math.min(pct, 1) * 100}%` as any, backgroundColor: barColor }]} />
+                    </View>
+                    {over && <Text style={styles.budgetOver}>⚠️ Over by {formatMoney(b.spent - b.limit)}</Text>}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* Wallets — premium per-wallet cards (horizontal) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -250,6 +338,70 @@ export default function DashboardScreenPremium() {
           </ScrollView>
         </View>
 
+        {/* 6-month income vs expense trend */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>6-Month Trend</Text>
+          <View style={styles.plainCard}>
+            <View style={styles.legendRow}>
+              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#10B981' }]} /><Text style={styles.legendText}>Income</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={styles.legendText}>Expense</Text></View>
+            </View>
+            <View style={styles.trendChart}>
+              {trend.map((t, i) => (
+                <View key={i} style={styles.trendCol}>
+                  <View style={styles.trendBars}>
+                    <View style={[styles.trendBar, { height: Math.max((t.inc / trendMax) * 90, 2), backgroundColor: '#10B981' }]} />
+                    <View style={[styles.trendBar, { height: Math.max((t.exp / trendMax) * 90, 2), backgroundColor: '#EF4444' }]} />
+                  </View>
+                  <Text style={styles.trendLabel}>{t.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Net worth trend */}
+        {nwMax > 1 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Net Worth (Liquid, PKR)</Text>
+            <View style={styles.plainCard}>
+              <Text style={styles.nwCurrent}>{formatPKRCompact(trend[trend.length - 1].nw)}</Text>
+              <View style={styles.trendChart}>
+                {trend.map((t, i) => (
+                  <View key={i} style={styles.trendCol}>
+                    <View style={[styles.nwBar, { height: Math.max((t.nw / nwMax) * 80, 2) }]} />
+                    <Text style={styles.trendLabel}>{t.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Spending by person */}
+        {personTotal > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Spending by Person</Text>
+            <View style={styles.plainCard}>
+              {byPerson.map(p => {
+                const pct = personTotal > 0 ? p.total / personTotal : 0;
+                const color = p.user.role === 'admin' ? COLORS.primary : COLORS.secondary;
+                return (
+                  <View key={p.user.id} style={styles.budgetRow}>
+                    <View style={styles.budgetTop}>
+                      <Text style={styles.budgetType}>{p.user.name}</Text>
+                      <Text style={styles.budgetNums}>{formatMoney(p.total)} · {Math.round(pct * 100)}%</Text>
+                    </View>
+                    <View style={styles.budgetBarBg}>
+                      <View style={[styles.budgetBarFill, { width: `${pct * 100}%` as any, backgroundColor: color }]} />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* Savings goals */}
         {savingsGoals.length > 0 && (
           <View style={styles.section}>
@@ -258,6 +410,12 @@ export default function DashboardScreenPremium() {
             </View>
             {savingsGoals.slice(0, 2).map(goal => {
               const pct = goal.targetAmount > 0 ? Math.min(goal.currentAmount / goal.targetAmount, 1) : 0;
+              const remaining = goal.targetAmount - goal.currentAmount;
+              const monthlySurplus = balance > 0 ? balance : 0;
+              const monthsLeft = monthlySurplus > 0 && remaining > 0 ? Math.ceil(remaining / monthlySurplus) : null;
+              const projection = pct >= 1 ? '🎉 Goal reached!'
+                : monthsLeft ? `At current pace: ~${format(addMonths(now, monthsLeft), 'MMM yyyy')}`
+                : 'Add monthly surplus to project';
               return (
                 <View key={goal.id} style={styles.goalCard}>
                   <View style={styles.goalIconBubble}>
@@ -267,11 +425,37 @@ export default function DashboardScreenPremium() {
                     <Text style={styles.goalName}>{goal.name}</Text>
                     <Text style={styles.goalSub}>{formatMoney(goal.currentAmount)} / {formatMoney(goal.targetAmount)}</Text>
                     <View style={styles.goalBarBg}><View style={[styles.goalBarFill, { width: `${pct * 100}%` as any }]} /></View>
+                    <Text style={styles.goalProjection}>🔮 {projection}</Text>
                   </View>
                   <View style={styles.goalCircle}><Text style={styles.goalPct}>{Math.round(pct * 100)}%</Text></View>
                 </View>
               );
             })}
+          </View>
+        )}
+
+        {/* Recurring bills due */}
+        {recurring.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recurring Bills · {fiscal.label}</Text>
+            <View style={styles.plainCard}>
+              {recurring.map((r, i) => (
+                <View key={r.category + i} style={[styles.recurRow, i < recurring.length - 1 && styles.recurRowBorder]}>
+                  <Text style={{ fontSize: 18 }}>{CATEGORY_EMOJI[r.category] ?? '🔁'}</Text>
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={styles.recurName}>{r.category}</Text>
+                    <Text style={styles.recurAmt}>{formatMoney(r.amount)}</Text>
+                  </View>
+                  {r.loggedThisMonth ? (
+                    <View style={styles.recurPaid}><Text style={styles.recurPaidText}>✓ Paid</Text></View>
+                  ) : (
+                    <TouchableOpacity style={styles.recurDue} onPress={() => navigation.navigate('AddExpense')}>
+                      <Text style={styles.recurDueText}>Due · Add</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </View>
           </View>
         )}
 
@@ -326,6 +510,11 @@ export default function DashboardScreenPremium() {
             <SummaryCard emoji={isPositive ? '✅' : '⚠️'} bg={isPositive ? '#F0FDF4' : '#FEF2F2'}
               label={isPositive ? 'Surplus' : 'Deficit'} color={isPositive ? '#15803D' : '#DC2626'} amt={formatMoney(Math.abs(balance))} />
           </View>
+
+          {/* Share report */}
+          <TouchableOpacity style={styles.shareBtn} onPress={shareReport} activeOpacity={0.85}>
+            <Text style={styles.shareBtnText}>📤  Share {fiscal.label} Report</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -493,4 +682,38 @@ const styles = StyleSheet.create({
   notifRowIcon: { fontSize: 22 },
   notifRowTitle: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
   notifRowSub: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
+
+  plainCard: { backgroundColor: COLORS.card, borderRadius: 16, padding: 16, marginRight: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 1 },
+  budgetRow: { marginBottom: 14 },
+  budgetTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  budgetType: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
+  budgetNums: { fontSize: responsiveFontSize(12), fontWeight: '600', color: COLORS.textMed },
+  budgetBarBg: { height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden' },
+  budgetBarFill: { height: 8, borderRadius: 4 },
+  budgetOver: { fontSize: responsiveFontSize(10), color: COLORS.danger, fontWeight: '700', marginTop: 4 },
+
+  legendRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '600' },
+  trendChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 110 },
+  trendCol: { flex: 1, alignItems: 'center' },
+  trendBars: { flexDirection: 'row', gap: 3, alignItems: 'flex-end', height: 92 },
+  trendBar: { width: 9, borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  trendLabel: { fontSize: 9, color: COLORS.textLight, fontWeight: '600', marginTop: 5 },
+  nwCurrent: { fontSize: responsiveFontSize(20), fontWeight: '800', color: COLORS.primary, marginBottom: 12 },
+  nwBar: { width: 16, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: '#7C3AED' },
+  goalProjection: { fontSize: responsiveFontSize(10), color: COLORS.primary, fontWeight: '600', marginTop: 6 },
+
+  recurRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
+  recurRowBorder: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  recurName: { fontSize: responsiveFontSize(13), fontWeight: '700', color: COLORS.text },
+  recurAmt: { fontSize: responsiveFontSize(11), color: COLORS.textLight, fontWeight: '600', marginTop: 1 },
+  recurPaid: { backgroundColor: '#D1FAE5', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  recurPaidText: { fontSize: responsiveFontSize(11), color: '#15803D', fontWeight: '700' },
+  recurDue: { backgroundColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  recurDueText: { fontSize: responsiveFontSize(11), color: '#fff', fontWeight: '700' },
+
+  shareBtn: { marginTop: 14, marginRight: 16, backgroundColor: '#1E293B', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  shareBtnText: { color: '#fff', fontSize: responsiveFontSize(14), fontWeight: '700' },
 });
