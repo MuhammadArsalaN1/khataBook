@@ -111,26 +111,28 @@ export default function DashboardScreenPremium() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* HEADER - Main Balance with Health Score */}
+        {/* HEADER - Full width gradient with content inside */}
         <LinearGradient colors={GRADIENTS.header as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={styles.greeting}>👋 {currentUser?.name}</Text>
-              <Text style={styles.headerSubtitle}>{format(now, 'MMMM yyyy')}</Text>
-            </View>
-            <View style={styles.healthScore}>
-              <View style={[styles.healthCircle, { backgroundColor: healthScore > 70 ? '#4ADE80' : healthScore > 50 ? '#FCD34D' : '#F87171' }]}>
-                <Text style={styles.healthText}>{healthScore}</Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerTop}>
+              <View>
+                <Text style={styles.greeting}>👋 {currentUser?.name}</Text>
+                <Text style={styles.headerSubtitle}>{format(now, 'MMMM yyyy')}</Text>
               </View>
-              <Text style={styles.healthLabel}>Health</Text>
+              <View style={styles.healthScore}>
+                <View style={[styles.healthCircle, { backgroundColor: healthScore > 70 ? '#4ADE80' : healthScore > 50 ? '#FCD34D' : '#F87171' }]}>
+                  <Text style={styles.healthText}>{healthScore}</Text>
+                </View>
+                <Text style={styles.healthLabel}>Health</Text>
+              </View>
             </View>
-          </View>
 
-          {/* Main Balance Card */}
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>💰 Main Balance</Text>
-            <Text style={styles.balanceAmount}>{formatMoney(funds.mainBalance)}</Text>
-            <Text style={styles.balanceStatus}>{funds.mainBalance >= 0 ? '✓ Positive' : '⚠️ Deficit'}</Text>
+            {/* Main Balance Card */}
+            <View style={styles.balanceCard}>
+              <Text style={styles.balanceLabel}>💰 Main Balance</Text>
+              <Text style={styles.balanceAmount}>{formatMoney(funds.mainBalance)}</Text>
+              <Text style={styles.balanceStatus}>{funds.mainBalance >= 0 ? '✓ Positive' : '⚠️ Deficit'}</Text>
+            </View>
           </View>
         </LinearGradient>
 
@@ -401,7 +403,8 @@ export default function DashboardScreenPremium() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FAFAF7' },
   scroll: { flex: 1 },
-  headerGradient: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
+  headerGradient: { width: '100%' },
+  headerContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   greeting: { fontSize: responsiveFontSize(20), fontWeight: '800', color: '#1A1A1A' },
   headerSubtitle: { fontSize: responsiveFontSize(12), color: 'rgba(26,26,26,0.6)', marginTop: 2, fontWeight: '600' },
