@@ -39,8 +39,11 @@ yarn-error.*
 # Firebase sensitive files
 google-services.json
 google-services.json.bak
+src/config/firebase.ts
 *.jks
 *.keystore
+*.p8
+*.mobileprovision
 
 # typescript
 *.tsbuildinfo
