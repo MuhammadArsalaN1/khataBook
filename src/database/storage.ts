@@ -8,7 +8,7 @@ import {
   serverTimestamp, getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate, Advance } from '../types';
+import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate, Advance, BudgetPool, RecurrenceRule } from '../types';
 
 // ── Collection refs ──────────────────────────────────────────────────────────
 export const expensesCol = () => collection(db, 'expenses');
@@ -124,4 +124,35 @@ export const deleteAdvanceDoc = (id: string) =>
 export const subscribeAdvances = (cb: (data: Advance[]) => void): Unsubscribe =>
   onSnapshot(advancesCol(), snap =>
     cb(snap.docs.map(d => d.data() as Advance))
+  );
+
+// ── Budget Pools (allocated spending categories like Diesel, Labor, Maintenance) ──
+export const budgetPoolsCol = () => collection(db, 'budgetPools');
+
+export const upsertBudgetPoolDoc = (pool: BudgetPool) =>
+  setDoc(doc(db, 'budgetPools', pool.id), pool);
+
+export const deleteBudgetPoolDoc = (id: string) =>
+  deleteDoc(doc(db, 'budgetPools', id));
+
+export const subscribeBudgetPools = (cb: (data: BudgetPool[]) => void): Unsubscribe =>
+  onSnapshot(budgetPoolsCol(), snap =>
+    cb(snap.docs.map(d => d.data() as BudgetPool))
+  );
+
+// ── Recurrence Rules (for automating recurring expenses) ──
+export const recurrenceRulesCol = () => collection(db, 'recurrenceRules');
+
+export const upsertRecurrenceRuleDoc = (rule: RecurrenceRule) =>
+  setDoc(doc(db, 'recurrenceRules', rule.id), rule);
+
+export const deleteRecurrenceRuleDoc = (id: string) =>
+  deleteDoc(doc(db, 'recurrenceRules', id));
+
+export const updateRecurrenceRuleDoc = (id: string, updates: Partial<RecurrenceRule>) =>
+  updateDoc(doc(db, 'recurrenceRules', id), { ...updates, updatedAt: new Date().toISOString() });
+
+export const subscribeRecurrenceRules = (cb: (data: RecurrenceRule[]) => void): Unsubscribe =>
+  onSnapshot(recurrenceRulesCol(), snap =>
+    cb(snap.docs.map(d => d.data() as RecurrenceRule))
   );

@@ -133,3 +133,66 @@ export interface ExpenseTemplate {
   notes?: string;
   createdAt: string;
 }
+
+// Budget Pools: Allocate money to specific spending categories (Diesel, Labor, etc.)
+export interface BudgetPool {
+  id: string;
+  name: string;            // "Diesel", "Labor", "Maintenance", etc.
+  type: ExpenseType;       // personal | office | farm
+  allocatedAmount: number; // How much to spend this month
+  spent: number;           // Calculated from linked expenses
+  remaining: number;       // allocatedAmount - spent
+  month: number;
+  year: number;
+  linkedCategories: string[]; // Which categories count toward this pool
+  alertThreshold: number;  // Alert at 80% (as percentage: 80)
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Recurrence Rule: Define when and how expenses repeat
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface RecurrenceRule {
+  id: string;
+  expenseTemplate: {  // The template to use for generating expenses
+    type: ExpenseType;
+    category: string;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    notes: string;
+  };
+  frequency: RecurrenceFrequency;
+  dayOfMonth?: number;      // For monthly: which day (1-31)
+  dayOfWeek?: number;       // For weekly: 0=Sun, 1=Mon, etc.
+  startDate: string;        // When to start repeating
+  endDate?: string;         // When to stop (optional)
+  active: boolean;
+  nextDueDate: string;      // Next auto-create date
+  lastCreatedDate?: string; // Last time an expense was auto-created
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Monthly Trend Point for analytics
+export interface SpendingTrendPoint {
+  month: number;
+  year: number;
+  label: string;           // "May 2024"
+  total: number;
+  byType: { personal: number; office: number; farm: number };
+  byCategory: Record<string, number>;
+  change?: number;         // % change from previous month
+  changeAmount?: number;   // Amount change from previous month
+}
+
+// Comparison for analytics
+export interface SpendingComparison {
+  thisMonth: number;
+  lastMonth: number;
+  threeMonthAvg: number;
+  sixMonthAvg: number;
+  lastYear: number;
+  percentChange: number;
+}

@@ -9,8 +9,10 @@ import {
   addExpenseDoc, updateExpenseDoc, deleteExpenseDoc,
   addLogDoc, upsertBudgetDoc, upsertIncomeDoc, upsertWalletDoc, deleteWalletDoc, upsertSavingsGoalDoc, deleteSavingsGoalDoc, upsertTemplateDoc, deleteTemplateDoc, saveSettings, getSettings,
   subscribeAdvances, upsertAdvanceDoc, deleteAdvanceDoc,
+  subscribeBudgetPools, upsertBudgetPoolDoc, deleteBudgetPoolDoc,
+  subscribeRecurrenceRules, upsertRecurrenceRuleDoc, deleteRecurrenceRuleDoc, updateRecurrenceRuleDoc,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance, BudgetPool, RecurrenceRule } from '../types';
 import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
 import { ExchangeRates } from '../utils/currency';
 import { saveCredentials, getCredentials, clearCredentials, promptBiometric } from '../utils/biometric';
@@ -20,11 +22,13 @@ interface AppState {
   expenses: Expense[];
   activityLogs: ActivityLog[];
   budgets: Budget[];
+  budgetPools: BudgetPool[];
   incomes: any[];
   wallets: Wallet[];
   savingsGoals: SavingsGoal[];
   templates: ExpenseTemplate[];
   advances: Advance[];
+  recurrenceRules: RecurrenceRule[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
@@ -38,11 +42,13 @@ let state: AppState = {
   expenses: [],
   activityLogs: [],
   budgets: [],
+  budgetPools: [],
   incomes: [],
   wallets: [],
   savingsGoals: [],
   templates: [],
   advances: [],
+  recurrenceRules: [],
   currentUser: null,
   firebaseUser: null,
   approvalMode: false,
@@ -66,6 +72,8 @@ let unsubWallets: (() => void) | null = null;
 let unsubSavingsGoals: (() => void) | null = null;
 let unsubTemplates: (() => void) | null = null;
 let unsubAdvances: (() => void) | null = null;
+let unsubBudgetPools: (() => void) | null = null;
+let unsubRecurrenceRules: (() => void) | null = null;
 
 function startListeners() {
   unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
@@ -76,6 +84,8 @@ function startListeners() {
   unsubSavingsGoals = subscribeSavingsGoals(savingsGoals => setState({ savingsGoals }));
   unsubTemplates = subscribeTemplates(templates => setState({ templates }));
   unsubAdvances = subscribeAdvances(advances => setState({ advances }));
+  unsubBudgetPools = subscribeBudgetPools(budgetPools => setState({ budgetPools }));
+  unsubRecurrenceRules = subscribeRecurrenceRules(recurrenceRules => setState({ recurrenceRules }));
 }
 
 function stopListeners() {
@@ -87,6 +97,8 @@ function stopListeners() {
   unsubSavingsGoals?.(); unsubSavingsGoals = null;
   unsubTemplates?.(); unsubTemplates = null;
   unsubAdvances?.(); unsubAdvances = null;
+  unsubBudgetPools?.(); unsubBudgetPools = null;
+  unsubRecurrenceRules?.(); unsubRecurrenceRules = null;
 }
 
 // ── Firebase Auth observer ────────────────────────────────────────────────────
@@ -112,10 +124,12 @@ onAuthStateChanged(auth, async (fbUser) => {
       expenses: [],
       activityLogs: [],
       budgets: [],
+      budgetPools: [],
       wallets: [],
       savingsGoals: [],
       templates: [],
       advances: [],
+      recurrenceRules: [],
       authLoading: false,
       dataLoading: false,
       authError: null,
@@ -373,6 +387,72 @@ export function useStore() {
     await deleteAdvanceDoc(id);
   }, []);
 
+  // ── Budget Pools ──────────────────────────────────────────────────────────────
+  const saveBudgetPool = useCallback(async (data: Omit<BudgetPool, 'id' | 'spent' | 'remaining' | 'createdAt' | 'updatedAt'>) => {
+    const id = `pool_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const now = new Date().toISOString();
+    const pool: BudgetPool = {
+      ...data,
+      id,
+      spent: 0,
+      remaining: data.allocatedAmount,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await upsertBudgetPoolDoc(pool);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'add',
+      expenseId: id,
+      details: `Created budget pool "${data.name}" with Rs. ${data.allocatedAmount.toLocaleString()} allocation`,
+    });
+    return pool;
+  }, []);
+
+  const updateBudgetPool = useCallback(async (id: string, updates: Partial<BudgetPool>) => {
+    const pool = state.budgetPools.find(p => p.id === id);
+    if (!pool) return;
+    const updated = { ...pool, ...updates, updatedAt: new Date().toISOString() };
+    await upsertBudgetPoolDoc(updated);
+  }, []);
+
+  const deleteBudgetPool = useCallback(async (id: string) => {
+    await deleteBudgetPoolDoc(id);
+  }, []);
+
+  // ── Recurrence Rules ──────────────────────────────────────────────────────────
+  const createRecurrenceRule = useCallback(async (data: Omit<RecurrenceRule, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const id = `recur_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const now = new Date().toISOString();
+    const rule: RecurrenceRule = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await upsertRecurrenceRuleDoc(rule);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'add',
+      expenseId: id,
+      details: `Created recurring expense: ${data.expenseTemplate.category} (${data.frequency})`,
+    });
+    return rule;
+  }, []);
+
+  const updateRecurrenceRule = useCallback(async (id: string, updates: Partial<RecurrenceRule>) => {
+    const rule = state.recurrenceRules.find(r => r.id === id);
+    if (!rule) return;
+    const updated = { ...rule, ...updates, updatedAt: new Date().toISOString() };
+    await updateRecurrenceRuleDoc(id, updated);
+  }, []);
+
+  const deleteRecurrenceRule = useCallback(async (id: string) => {
+    await deleteRecurrenceRuleDoc(id);
+  }, []);
+
   return {
     ...state,
     loading: state.authLoading || state.dataLoading,
@@ -398,5 +478,11 @@ export function useStore() {
     settleAdvance,
     reopenAdvance,
     deleteAdvance,
+    saveBudgetPool,
+    updateBudgetPool,
+    deleteBudgetPool,
+    createRecurrenceRule,
+    updateRecurrenceRule,
+    deleteRecurrenceRule,
   };
 }
