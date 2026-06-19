@@ -147,6 +147,20 @@ export default function SettingsScreen() {
             subtitle="Money given / received & fund sources"
             onPress={() => navigation.navigate('Funds')}
           />
+          <SettingsRow
+            icon="📦"
+            iconBg="#F5F5F0"
+            label="Budget Pools"
+            subtitle="Allocate spending to categories (Diesel, Labor, etc.)"
+            onPress={() => navigation.navigate('Pools')}
+          />
+          <SettingsRow
+            icon="📈"
+            iconBg="#FEF3C7"
+            label="Spending Trends"
+            subtitle="Analyze 6-month spending patterns"
+            onPress={() => navigation.navigate('Trends')}
+          />
         </View>
 
         <Text style={styles.groupLabel}>FINANCE</Text>

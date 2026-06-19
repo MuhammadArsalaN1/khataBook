@@ -17,6 +17,8 @@ import SettingsScreen from '../screens/Settings/SettingsScreen';
 import EarningsScreen from '../screens/Settings/EarningsScreen';
 import WalletScreen from '../screens/Settings/WalletScreen';
 import FundsScreen from '../screens/Funds/FundsScreen';
+import PoolsScreen from '../screens/Pools/PoolsScreen';
+import TrendsScreen from '../screens/Analytics/TrendsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -101,6 +103,8 @@ function AppStack() {
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Reports" component={ReportsScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Funds" component={FundsScreen} options={{ presentation: 'card' }} />
+      <Stack.Screen name="Pools" component={PoolsScreen} options={{ presentation: 'card' }} />
+      <Stack.Screen name="Trends" component={TrendsScreen} options={{ presentation: 'card' }} />
     </Stack.Navigator>
   );
 }
