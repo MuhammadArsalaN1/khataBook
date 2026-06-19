@@ -9,13 +9,13 @@ import { COLORS, GRADIENTS } from '../../constants';
 import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney } from '../../utils/currency';
 import { getUserAdvanceBalance, enrichAdvanceEntry } from '../../utils/advanceBalance';
-import { getReturnSummary, validateReturn, recordAdvanceReturn, getPendingAmount } from '../../utils/advanceReturns';
+import { getReturnSummary, validateReturn, getPendingAmount } from '../../utils/advanceReturns';
 import { AdvanceBalanceEntry } from '../../types';
 
 const W = Dimensions.get('window').width;
 
 export default function AdvanceBalanceScreen() {
-  const { advanceBalanceEntries = [], currentUser, expenses = [] } = useStore();
+  const { advanceBalanceEntries = [], currentUser, expenses = [], recordAdvanceReturn: recordAdvanceReturnStore } = useStore();
   const [selectedAdvance, setSelectedAdvance] = useState<AdvanceBalanceEntry | null>(null);
   const [returnAmount, setReturnAmount] = useState('');
   const [returnMethod, setReturnMethod] = useState('cash');
@@ -54,16 +54,12 @@ export default function AdvanceBalanceScreen() {
     }
 
     try {
-      const updatedEntry = recordAdvanceReturn(
-        selectedAdvance,
+      await recordAdvanceReturnStore(
+        selectedAdvance.id,
         amount,
         returnMethod,
-        currentUser?.id || '',
         returnNotes
       );
-
-      // Update in Firebase (assuming updateAdvanceBalanceEntry exists in store)
-      // await updateAdvanceBalanceEntry(updatedEntry);
 
       Alert.alert('Success', `Return of Rs. ${amount} recorded successfully!`);
       setShowReturnModal(false);
