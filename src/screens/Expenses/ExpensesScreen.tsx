@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<ExpenseStatus, string> = {
 };
 
 export default function ExpensesScreen() {
-  const { expenses, currentUser, deleteExpense, approveExpense } = useStore();
+  const { expenses = [], currentUser, deleteExpense, approveExpense } = useStore();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 

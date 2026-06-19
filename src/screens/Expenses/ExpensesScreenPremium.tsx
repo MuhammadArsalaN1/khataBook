@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<ExpenseStatus, string> = {
 const CAT_PALETTE = COLORS.chart;
 
 export default function ExpensesScreenPremium() {
-  const { expenses, currentUser, deleteExpense, approveExpense, advances, advanceBalanceEntries, syncData, dataLoading } = useStore();
+  const { expenses = [], currentUser, deleteExpense, approveExpense, advances = [], advanceBalanceEntries = [], syncData, dataLoading } = useStore();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 

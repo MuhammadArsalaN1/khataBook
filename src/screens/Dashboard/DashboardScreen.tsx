@@ -13,7 +13,7 @@ import BudgetBar from '../../components/common/BudgetBar';
 import { getDashboardStats, getSmartInsights, getMonthlyComparisons } from '../../utils/analytics';
 
 export default function DashboardScreen() {
-  const { expenses, budgets, currentUser, activityLogs } = useStore();
+  const { expenses = [], budgets = [], currentUser, activityLogs = [] } = useStore();
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = React.useState(false);
 

@@ -103,7 +103,7 @@ const iec = StyleSheet.create({
 });
 
 export default function AnalyticsScreen() {
-  const { expenses, incomes, wallets, exchangeRates } = useStore();
+  const { expenses = [], incomes = [], wallets = [], exchangeRates } = useStore();
   const [tab, setTab] = useState<TabType>('6months');
   const [period] = useState<6>(6);
 

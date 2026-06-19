@@ -20,7 +20,7 @@ import { analyzeSpendingPatterns, getVelocityInsight } from '../../utils/spendin
 const W = Dimensions.get('window').width;
 
 export default function DashboardScreenPremium() {
-  const { expenses, incomes, currentUser, budgets, approveExpense, approveIncome, budgetPools, advances, recurrenceRules } = useStore();
+  const { expenses = [], incomes = [], currentUser, budgets = [], approveExpense, approveIncome, budgetPools = [], advances = [], recurrenceRules = [] } = useStore();
   const navigation = useNavigation<any>();
 
   const now = new Date();

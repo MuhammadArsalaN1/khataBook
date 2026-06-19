@@ -17,7 +17,7 @@ const ACTION_ICONS: Record<ActionType, string> = {
 };
 
 export default function ActivityScreen() {
-  const { activityLogs } = useStore();
+  const { activityLogs = [] } = useStore();
   const [search, setSearch] = useState('');
   const [filterUser, setFilterUser] = useState<string>('all');
   const [filterAction, setFilterAction] = useState<ActionType | 'all'>('all');

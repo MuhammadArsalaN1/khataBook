@@ -20,7 +20,7 @@ const PAYMENTS: PaymentMethod[] = ['cash', 'bank', 'jazzcash', 'digital', 'paypa
 export default function AddExpenseScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { currentUser, addExpense, editExpense, approvalMode, expenses, advanceBalanceEntries } = useStore();
+  const { currentUser, addExpense, editExpense, approvalMode, expenses = [], advanceBalanceEntries = [] } = useStore();
 
   const editing: Expense | undefined = route.params?.expenseId
     ? expenses.find(e => e.id === route.params.expenseId) : undefined;

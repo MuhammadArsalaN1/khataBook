@@ -11,7 +11,7 @@ import { responsiveFontSize } from '../../utils/responsive';
 
 export default function TrendsScreen() {
   const navigation = useNavigation<any>();
-  const { expenses } = useStore();
+  const { expenses = [] } = useStore();
 
   const trends = useMemo(() => getSpendingTrends(expenses, 6), [expenses]);
   const comparison = useMemo(() => compareSpending(expenses), [expenses]);
