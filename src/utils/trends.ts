@@ -76,14 +76,19 @@ export function compareSpending(expenses: Expense[]): SpendingComparison {
   const current = getMonthlySpending(expenses, thisMonth, thisYear).total;
   const lastMonth = getMonthlySpending(expenses, thisMonth === 1 ? 12 : thisMonth - 1, thisMonth === 1 ? thisYear - 1 : thisYear).total;
 
-  // 3-month average (current + last 2 months)
+  // 3-month average (last 3 complete months, excluding current partial month)
   const three1 = lastMonth;
   const three2 = getMonthlySpending(
     expenses,
     thisMonth === 1 ? 11 : thisMonth - 2,
     thisMonth <= 2 ? thisYear - 1 : thisYear
   ).total;
-  const threeMonthAvg = (current + three1 + three2) / 3;
+  const three3 = getMonthlySpending(
+    expenses,
+    thisMonth <= 3 ? 12 + (thisMonth - 3) : thisMonth - 3,
+    thisMonth <= 3 ? thisYear - 1 : thisYear
+  ).total;
+  const threeMonthAvg = (three1 + three2 + three3) / 3;
 
   // 6-month average
   let sixMonthTotal = current;
