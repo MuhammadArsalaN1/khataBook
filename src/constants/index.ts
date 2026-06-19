@@ -23,26 +23,22 @@ export const CATEGORIES: Record<ExpenseType, string[]> = {
   ],
 };
 
-export const COLORS = {
+export const COLORS_LIGHT = {
   // Brand — White / Black / Yellow theme.
-  // `primary` = the interactive/ink color (black) so buttons keep white text.
-  // `accent` = the yellow highlight (progress bars, pills, selected states).
   primary: '#1A1A1A',
-  primaryLight: '#FCD34D',   // soft yellow tint (used as pale backgrounds)
+  primaryLight: '#FCD34D',
   primaryDark: '#000000',
-  accent: '#F5B700',         // signature yellow
+  accent: '#F5B700',
   accentDark: '#D99E00',
-  accentSoft: '#FEF3C7',     // pale yellow surface
-  onAccent: '#1A1A1A',       // text on yellow
-  secondary: '#CA8A04',      // gold (secondary accents)
-  // Semantic
+  accentSoft: '#FEF3C7',
+  onAccent: '#1A1A1A',
+  secondary: '#CA8A04',
   success: '#D99E00',
   successLight: '#FEF3C7',
   warning: '#F5B700',
   warningLight: '#FEF3C7',
   danger: '#1A1A1A',
   dangerLight: '#F5F5F0',
-  // Types
   personal: '#1A1A1A',
   personalLight: '#ECECE6',
   personalBg: '#FAFAF7',
@@ -55,31 +51,78 @@ export const COLORS = {
   farmLight: '#FEF3C7',
   farmBg: '#FFFDF5',
   farmGradient: ['#F5B700', '#D99E00'],
-  // UI — soft white surfaces, rounded cards
   background: '#FAFAF7',
   card: '#FFFFFF',
   cardSecondary: '#F5F5F0',
   border: '#ECECE6',
   divider: '#F0F0EA',
-  // Text — black & readable
   text: '#1A1A1A',
   textMed: '#52525B',
   textLight: '#9C9C95',
   textAlt: '#B4B4AD',
-  // Misc
   white: '#FFFFFF',
   dark: '#1A1A1A',
   overlay: 'rgba(26,26,26,0.5)',
   overlayLight: 'rgba(26,26,26,0.2)',
   shadow: 'rgba(0,0,0,0.08)',
   shadowDark: 'rgba(0,0,0,0.14)',
-  // Chart palette — black/yellow led
   chart: ['#1A1A1A','#F5B700','#D99E00','#52525B','#FACC15','#9C9C95','#FDE68A','#B4B4AD'],
-  // Gradient presets
   incomeGradient: ['#F5B700', '#D99E00'],
   expenseGradient: ['#52525B', '#1A1A1A'],
   balanceGradient: ['#FACC15', '#F5B700'],
 };
+
+export const COLORS_DARK = {
+  // Dark mode theme
+  primary: '#F5F5F0',
+  primaryLight: '#2A2A1A',
+  primaryDark: '#FFFFFF',
+  accent: '#FFA500',
+  accentDark: '#FFB700',
+  accentSoft: '#3A3A2A',
+  onAccent: '#F5F5F0',
+  secondary: '#FFB700',
+  success: '#4ADE80',
+  successLight: '#1E3A1F',
+  warning: '#FFA500',
+  warningLight: '#3A2A1A',
+  danger: '#F87171',
+  dangerLight: '#3A1A1A',
+  personal: '#E0E0E0',
+  personalLight: '#3A3A3A',
+  personalBg: '#1A1A1A',
+  personalGradient: ['#2A2A2A', '#1A1A1A'],
+  office: '#FFB700',
+  officeLight: '#3A2A1A',
+  officeBg: '#2A1F0A',
+  officeGradient: ['#FFB700', '#FFA500'],
+  farm: '#FFB700',
+  farmLight: '#3A2A1A',
+  farmBg: '#2A1F0A',
+  farmGradient: ['#FFA500', '#FFB700'],
+  background: '#121212',
+  card: '#1E1E1E',
+  cardSecondary: '#2A2A2A',
+  border: '#3A3A3A',
+  divider: '#2A2A2A',
+  text: '#F5F5F0',
+  textMed: '#B0B0A0',
+  textLight: '#808080',
+  textAlt: '#606060',
+  white: '#FFFFFF',
+  dark: '#121212',
+  overlay: 'rgba(0,0,0,0.7)',
+  overlayLight: 'rgba(0,0,0,0.4)',
+  shadow: 'rgba(0,0,0,0.3)',
+  shadowDark: 'rgba(0,0,0,0.5)',
+  chart: ['#F5F5F0','#FFA500','#FFB700','#B0B0A0','#FFD700','#808080','#FFFF99','#606060'],
+  incomeGradient: ['#FFA500', '#FFB700'],
+  expenseGradient: ['#B0B0A0', '#F5F5F0'],
+  balanceGradient: ['#FFD700', '#FFA500'],
+};
+
+// Default to light mode (can be switched via store)
+export const COLORS = COLORS_LIGHT;
 
 // Centralized gradients used across screens (soft, premium).
 export const GRADIENTS = {

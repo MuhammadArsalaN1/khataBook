@@ -12,7 +12,7 @@ import {
   subscribeBudgetPools, upsertBudgetPoolDoc, deleteBudgetPoolDoc,
   subscribeRecurrenceRules, upsertRecurrenceRuleDoc, deleteRecurrenceRuleDoc, updateRecurrenceRuleDoc,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance, BudgetPool, RecurrenceRule } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance, BudgetPool, RecurrenceRule, Theme } from '../types';
 import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
 import { ExchangeRates } from '../utils/currency';
 import { saveCredentials, getCredentials, clearCredentials, promptBiometric } from '../utils/biometric';
@@ -33,6 +33,7 @@ interface AppState {
   firebaseUser: FirebaseUser | null;
   approvalMode: boolean;
   exchangeRates: ExchangeRates;
+  theme: Theme;
   authLoading: boolean;
   dataLoading: boolean;
   authError: string | null;
@@ -53,6 +54,7 @@ let state: AppState = {
   firebaseUser: null,
   approvalMode: false,
   exchangeRates: { ...DEFAULT_EXCHANGE_RATES },
+  theme: 'light',
   authLoading: true,
   dataLoading: true,
   authError: null,
@@ -111,6 +113,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       currentUser: appUser,
       approvalMode: settings.approvalMode === true,
       exchangeRates: { ...DEFAULT_EXCHANGE_RATES, ...(settings.exchangeRates as Partial<ExchangeRates> ?? {}) },
+      theme: (settings.theme as Theme) || 'light',
       authLoading: false,
       dataLoading: true,
       authError: null,
@@ -453,6 +456,13 @@ export function useStore() {
     await deleteRecurrenceRuleDoc(id);
   }, []);
 
+  // ── Theme ─────────────────────────────────────────────────────────────────────
+  const toggleTheme = useCallback(async () => {
+    const newTheme: Theme = state.theme === 'light' ? 'dark' : 'light';
+    setState({ theme: newTheme });
+    await saveSettings({ ...state, theme: newTheme });
+  }, []);
+
   return {
     ...state,
     loading: state.authLoading || state.dataLoading,
@@ -484,5 +494,6 @@ export function useStore() {
     createRecurrenceRule,
     updateRecurrenceRule,
     deleteRecurrenceRule,
+    toggleTheme,
   };
 }

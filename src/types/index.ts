@@ -6,6 +6,8 @@ export type PaymentMethod = 'cash' | 'bank' | 'digital' | 'jazzcash' | 'paypal' 
 
 export type Currency = 'PKR' | 'USD' | 'EUR' | 'GBP';
 
+export type Theme = 'light' | 'dark';
+
 export type ExpenseStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 
 export type ActionType = 'add' | 'edit' | 'delete' | 'approve' | 'reject';

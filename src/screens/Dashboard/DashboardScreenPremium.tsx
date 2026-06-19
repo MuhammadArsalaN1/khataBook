@@ -14,6 +14,8 @@ import { responsiveFontSize } from '../../utils/responsive';
 import { formatMoney, toPKR, formatPKRCompact } from '../../utils/currency';
 import { getActiveFiscalMonth, getResetCountdown, Countdown } from '../../utils/fiscalMonth';
 import { fundsSummary } from '../../utils/funds';
+import { poolsSummary } from '../../utils/pools';
+import { calculateSavingsPotential, getSpendingVelocity } from '../../utils/forecast';
 import AnimatedIcon from '../../components/common/AnimatedIcon';
 import BrandMark from '../../components/common/BrandMark';
 
@@ -32,7 +34,7 @@ function useCountdown(): Countdown {
 }
 
 export default function DashboardScreenPremium() {
-  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets, approveExpense, approveIncome, advances } = useStore();
+  const { expenses, incomes, currentUser, wallets, savingsGoals, activityLogs, exchangeRates, budgets, approveExpense, approveIncome, advances, budgetPools } = useStore();
   const navigation = useNavigation<any>();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -75,6 +77,18 @@ export default function DashboardScreenPremium() {
   const totalLiquid = useMemo(() => walletData.reduce((s, w) => s + w.pkr, 0), [walletData]);
 
   const funds = useMemo(() => fundsSummary(incomes, expenses, advances), [incomes, expenses, advances]);
+
+  // Budget pools alerts (current month)
+  const poolAlerts = useMemo(() => {
+    const currentPools = budgetPools.filter(p => p.month === month && p.year === year);
+    return poolsSummary(currentPools, expenses);
+  }, [budgetPools, expenses, month, year]);
+
+  // Spending insights: savings potential & velocity
+  const insights = useMemo(() => ({
+    savings: calculateSavingsPotential(expenses),
+    velocity: getSpendingVelocity(expenses),
+  }), [expenses]);
 
   // 5 latest transactions, most recent first
   const recent = useMemo(
@@ -293,6 +307,43 @@ export default function DashboardScreenPremium() {
                 </View>
               );
             })}
+          </View>
+        )}
+
+        {/* Alerts & Insights */}
+        {(poolAlerts.alertedPools > 0 || insights.savings.potentialSavings > 0 || insights.velocity.isAccelerating) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⚠️ Alerts & Insights</Text>
+            {poolAlerts.alertedPools > 0 && (
+              <TouchableOpacity
+                style={[styles.alertCard, { backgroundColor: '#FFE5E5', borderLeftColor: '#991B1B', borderLeftWidth: 4 }]}
+                onPress={() => navigation.navigate('Pools')}
+              >
+                <Text style={{ color: '#991B1B', fontWeight: '700', fontSize: responsiveFontSize(13) }}>
+                  ⚠️ {poolAlerts.alertedPools} budget pool{poolAlerts.alertedPools !== 1 ? 's' : ''} at alert threshold
+                </Text>
+              </TouchableOpacity>
+            )}
+            {insights.savings.potentialSavings > 0 && (
+              <View style={[styles.alertCard, { backgroundColor: '#E5F5FF', borderLeftColor: '#0066CC', borderLeftWidth: 4 }]}>
+                <Text style={{ color: '#0066CC', fontWeight: '700', fontSize: responsiveFontSize(13) }}>
+                  💰 Save {formatMoney(insights.savings.potentialSavings)} by matching your average
+                </Text>
+                <Text style={{ color: '#0066CC', fontWeight: '500', fontSize: responsiveFontSize(11), marginTop: 4 }}>
+                  On track: {formatMoney(insights.savings.currentOnTrack)} | Average: {formatMoney(insights.savings.historicalAverage)}
+                </Text>
+              </View>
+            )}
+            {insights.velocity.isAccelerating && (
+              <View style={[styles.alertCard, { backgroundColor: '#FFF5E5', borderLeftColor: '#CC6600', borderLeftWidth: 4 }]}>
+                <Text style={{ color: '#CC6600', fontWeight: '700', fontSize: responsiveFontSize(13) }}>
+                  📈 Spending accelerating ({Math.round(insights.velocity.changePercent)}%)
+                </Text>
+                <Text style={{ color: '#CC6600', fontWeight: '500', fontSize: responsiveFontSize(11), marginTop: 4 }}>
+                  Last 7 days: {formatMoney(insights.velocity.lastWeekDaily)}/day vs {formatMoney(insights.velocity.firstWeekDaily)}/day
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -817,6 +868,7 @@ const styles = StyleSheet.create({
   fundsStat: { alignItems: 'flex-start' },
   fundsStatLabel: { fontSize: responsiveFontSize(10), color: COLORS.textLight, fontWeight: '600' },
   fundsStatVal: { fontSize: responsiveFontSize(13), color: COLORS.text, fontWeight: '800', marginTop: 2 },
+  alertCard: { backgroundColor: '#FEF3C7', borderRadius: 12, padding: 12, marginBottom: 10 },
   approvalBadge: { backgroundColor: COLORS.accent, borderRadius: 12, minWidth: 24, paddingHorizontal: 8, paddingVertical: 2, alignItems: 'center' },
   approvalBadgeText: { color: '#1A1A1A', fontWeight: '800', fontSize: responsiveFontSize(12) },
   approvalCard: { backgroundColor: COLORS.card, borderRadius: 14, padding: 14, marginBottom: 10, marginRight: 16, borderLeftWidth: 4, borderLeftColor: COLORS.accent, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },

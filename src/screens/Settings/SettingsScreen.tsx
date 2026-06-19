@@ -63,7 +63,7 @@ const settingRowStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { currentUser, logout, approvalMode, toggleApprovalMode, budgets, saveBudget, exchangeRates, saveExchangeRates } = useStore();
+  const { currentUser, logout, approvalMode, toggleApprovalMode, budgets, saveBudget, exchangeRates, saveExchangeRates, theme, toggleTheme } = useStore();
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
@@ -161,6 +161,13 @@ export default function SettingsScreen() {
             subtitle="Analyze 6-month spending patterns"
             onPress={() => navigation.navigate('Trends')}
           />
+          <SettingsRow
+            icon="🔄"
+            iconBg="#F5F5F0"
+            label="Recurring Expenses"
+            subtitle="Auto-create bills, subscriptions, salaries"
+            onPress={() => navigation.navigate('Recurrence')}
+          />
         </View>
 
         <Text style={styles.groupLabel}>FINANCE</Text>
@@ -248,6 +255,21 @@ export default function SettingsScreen() {
 
         <Text style={styles.groupLabel}>APP</Text>
         <View style={styles.group}>
+          <SettingsRow
+            icon="🌙"
+            iconBg="#F5F5F0"
+            label="Dark Mode"
+            subtitle={theme === 'dark' ? 'Enabled' : 'Disabled'}
+            onPress={undefined}
+            right={
+              <Switch
+                value={theme === 'dark'}
+                onValueChange={toggleTheme}
+                trackColor={{ true: COLORS.primary, false: '#ECECE6' }}
+                thumbColor="#fff"
+              />
+            }
+          />
           <View style={[settingRowStyles.row, { borderBottomWidth: 1 }]}>
             <View style={[settingRowStyles.iconBg, { backgroundColor: '#FFFDF5' }]}>
               <Text style={settingRowStyles.icon}>📒</Text>
