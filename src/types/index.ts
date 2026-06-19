@@ -198,3 +198,50 @@ export interface SpendingComparison {
   lastYear: number;
   percentChange: number;
 }
+
+// ============================================================================
+// ADVANCE BALANCE FEATURE: For team members/users to track advance amounts
+// ============================================================================
+
+export type AdvanceBalanceSource = 'advance' | 'personal';
+
+export interface AdvanceBalance {
+  id: string;
+  userId: string;           // Recipient user ID
+  givenBy: string;          // Giver user ID (usually admin)
+  originalAmount: number;   // Initial advance amount
+  usedAmount: number;       // Total used so far
+  remainingBalance: number; // originalAmount - usedAmount
+  status: 'active' | 'settled';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdvanceTransaction {
+  id: string;
+  advanceBalanceId: string;
+  expenseId: string;
+  amount: number;
+  category: string;
+  description: string;
+  transactionDate: string;
+  createdAt: string;
+}
+
+export interface AdvanceBalanceSummary {
+  userId: string;
+  userName: string;
+  totalAdvancesGiven: number;
+  totalAdvancesUsed: number;
+  totalRemaining: number;
+  activeAdvances: number;
+  settlementPercentage: number; // 0-100
+  recentTransactions: AdvanceTransaction[];
+}
+
+export interface Expense {
+  // ... existing fields ...
+  source?: AdvanceBalanceSource; // 'advance' | 'personal' (default: 'personal')
+  advanceBalanceId?: string;     // If source is 'advance', which one
+}
