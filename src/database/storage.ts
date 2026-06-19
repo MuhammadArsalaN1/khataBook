@@ -8,7 +8,7 @@ import {
   serverTimestamp, getDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate, Advance, BudgetPool, RecurrenceRule, AdvanceBalance } from '../types';
+import { Expense, ActivityLog, Budget, Wallet, SavingsGoal, ExpenseTemplate, Advance, BudgetPool, RecurrenceRule, AdvanceBalanceEntry } from '../types';
 
 // ── Collection refs ──────────────────────────────────────────────────────────
 export const expensesCol = () => collection(db, 'expenses');
@@ -182,21 +182,21 @@ export const subscribeRecurrenceRules = (cb: (data: RecurrenceRule[]) => void, o
     err => { console.error('Recurrence rules listener error:', err); onError?.(err); }
   );
 
-// ── Advance Balance (NEW FEATURE) ──────────────────────────────────────────
-export const advanceBalancesCol = () => collection(db, 'advanceBalances');
+// ── Advance Balance Entries (NEW FEATURE: Fund transfers between users) ──────────────────────────────────────────
+export const advanceBalanceEntriesCol = () => collection(db, 'advanceBalanceEntries');
 
-export const upsertAdvanceBalanceDoc = (advanceBalance: AdvanceBalance) =>
-  setDoc(doc(db, 'advanceBalances', advanceBalance.id), advanceBalance);
+export const upsertAdvanceBalanceEntry = (entry: AdvanceBalanceEntry) =>
+  setDoc(doc(db, 'advanceBalanceEntries', entry.id), entry);
 
-export const deleteAdvanceBalanceDoc = (id: string) =>
-  deleteDoc(doc(db, 'advanceBalances', id));
+export const deleteAdvanceBalanceEntry = (id: string) =>
+  deleteDoc(doc(db, 'advanceBalanceEntries', id));
 
-export const updateAdvanceBalanceDoc = (id: string, updates: Partial<AdvanceBalance>) =>
-  updateDoc(doc(db, 'advanceBalances', id), { ...updates, updatedAt: new Date().toISOString() });
+export const updateAdvanceBalanceEntry = (id: string, updates: Partial<AdvanceBalanceEntry>) =>
+  updateDoc(doc(db, 'advanceBalanceEntries', id), { ...updates, updatedAt: new Date().toISOString() });
 
-export const subscribeAdvanceBalances = (cb: (data: AdvanceBalance[]) => void, onError?: (err: any) => void): Unsubscribe =>
+export const subscribeAdvanceBalanceEntries = (cb: (data: AdvanceBalanceEntry[]) => void, onError?: (err: any) => void): Unsubscribe =>
   onSnapshot(
-    query(advanceBalancesCol(), orderBy('createdAt', 'desc')),
-    snap => cb(snap.docs.map(d => d.data() as AdvanceBalance)),
-    err => { console.error('Advance balances listener error:', err); onError?.(err); }
+    query(advanceBalanceEntriesCol(), orderBy('transactionDate', 'desc')),
+    snap => cb(snap.docs.map(d => d.data() as AdvanceBalanceEntry)),
+    err => { console.error('Advance balance entries listener error:', err); onError?.(err); }
   );

@@ -200,27 +200,42 @@ export interface SpendingComparison {
 }
 
 // ============================================================================
-// ADVANCE BALANCE FEATURE: For team members/users to track advance amounts
+// ADVANCE BALANCE FEATURE: Transfer funds between users/team members
 // ============================================================================
 
 export type AdvanceBalanceSource = 'advance' | 'personal';
 
-export interface AdvanceBalance {
+export interface AdvanceBalanceEntry {
   id: string;
-  userId: string;           // Recipient user ID
-  givenBy: string;          // Giver user ID (usually admin)
-  originalAmount: number;   // Initial advance amount
-  usedAmount: number;       // Total used so far
-  remainingBalance: number; // originalAmount - usedAmount
-  status: 'active' | 'settled';
+  giverName: string;           // Name of person giving (e.g., "Arsalan", "Rehan")
+  giverEmail: string;          // Auto-resolved email (e.g., "arsalan@itcorpinc.com" or "others")
+  receiverName: string;        // Name of person receiving
+  receiverEmail: string;       // Auto-resolved email (e.g., "rehan@itcorpinc.com" or "others")
+  amount: number;
+  direction: 'given' | 'received'; // From logged-in user's perspective
+  transactionDate: string;
   notes?: string;
+  status: 'active' | 'settled'; // settled = receiver has returned full amount
+  returnedAmount?: number;
+  createdBy: string;           // Logged-in user who created this entry
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AdvanceTransaction {
+export interface UserAdvanceBalance {
+  email: string;               // User email (rehan@itcorpinc.com or "others")
+  displayName: string;         // Display name (Rehan or Others)
+  balance: number;             // Current advance balance (positive = they owe, negative = owed to them)
+  totalReceived: number;       // Total advances received
+  totalGiven: number;          // Total advances given
+  settledCount: number;
+  activeCount: number;
+  lastTransaction?: string;
+}
+
+export interface AdvanceBalanceTransaction {
   id: string;
-  advanceBalanceId: string;
+  advanceEntryId: string;
   expenseId: string;
   amount: number;
   category: string;
@@ -230,18 +245,17 @@ export interface AdvanceTransaction {
 }
 
 export interface AdvanceBalanceSummary {
-  userId: string;
-  userName: string;
-  totalAdvancesGiven: number;
-  totalAdvancesUsed: number;
-  totalRemaining: number;
+  email: string;
+  displayName: string;
+  balance: number;
+  totalReceived: number;
+  totalGiven: number;
   activeAdvances: number;
-  settlementPercentage: number; // 0-100
-  recentTransactions: AdvanceTransaction[];
+  recentTransactions: AdvanceBalanceTransaction[];
 }
 
 export interface Expense {
   // ... existing fields ...
   source?: AdvanceBalanceSource; // 'advance' | 'personal' (default: 'personal')
-  advanceBalanceId?: string;     // If source is 'advance', which one
+  advanceEntryId?: string;       // If source is 'advance', which entry
 }

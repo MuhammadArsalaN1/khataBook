@@ -1,80 +1,116 @@
-import { AdvanceBalance, AdvanceTransaction, AdvanceBalanceSummary, Expense } from '../types';
+import { AdvanceBalanceEntry, AdvanceBalanceTransaction, UserAdvanceBalance, AdvanceBalanceSummary, Expense } from '../types';
+import { getDisplayName } from './userResolution';
 
 const counted = (s?: string) => s !== 'rejected' && s !== 'pending';
 
 /**
- * Calculate total amount used from an advance balance through expenses
+ * Calculate total amount used from an advance entry through expenses
  */
 export function calculateAdvanceUsed(
-  advanceId: string,
+  advanceEntryId: string,
   expenses: Expense[]
 ): number {
   return expenses
-    .filter(e => e.advanceBalanceId === advanceId && e.source === 'advance' && counted(e.status))
+    .filter(e => e.advanceEntryId === advanceEntryId && e.source === 'advance' && counted(e.status))
     .reduce((sum, e) => sum + e.amount, 0);
 }
 
 /**
- * Calculate remaining balance for an advance
+ * Calculate remaining balance for an advance entry
  */
 export function calculateAdvanceRemaining(
-  advance: AdvanceBalance,
+  entry: AdvanceBalanceEntry,
   expenses: Expense[]
 ): number {
-  const used = calculateAdvanceUsed(advance.id, expenses);
-  return Math.max(0, advance.originalAmount - used);
+  const used = calculateAdvanceUsed(entry.id, expenses);
+  return Math.max(0, entry.amount - used);
 }
 
 /**
- * Enrich advance balance with calculated values
+ * Calculate the balance for a specific user email
+ * Positive = they owe money, Negative = money owed to them
  */
-export interface AdvanceBalanceWithCalculations extends AdvanceBalance {
-  calculatedUsed: number;
-  calculatedRemaining: number;
-  settlementPercentage: number;
+export function calculateUserBalance(
+  userEmail: string,
+  entries: AdvanceBalanceEntry[],
+  expenses: Expense[]
+): number {
+  let balance = 0;
+
+  entries.forEach(entry => {
+    const used = calculateAdvanceUsed(entry.id, expenses);
+    const remaining = entry.amount - used;
+
+    if (entry.direction === 'given') {
+      // If I gave money to someone
+      if (entry.receiverEmail === userEmail) {
+        // They received from me, so they owe me
+        balance += remaining;
+      }
+    } else {
+      // If I received money from someone
+      if (entry.giverEmail === userEmail) {
+        // They gave to me, so I owe them
+        balance += remaining;
+      }
+    }
+  });
+
+  return balance;
 }
 
-export function enrichAdvanceBalance(
-  advance: AdvanceBalance,
+/**
+ * Get user advance balance summary
+ */
+export function getUserAdvanceBalance(
+  userEmail: string,
+  entries: AdvanceBalanceEntry[],
   expenses: Expense[]
-): AdvanceBalanceWithCalculations {
-  const calculatedUsed = calculateAdvanceUsed(advance.id, expenses);
-  const calculatedRemaining = calculateAdvanceRemaining(advance, expenses);
-  const settlementPercentage = advance.originalAmount > 0
-    ? Math.round((calculatedUsed / advance.originalAmount) * 100)
-    : 0;
+): UserAdvanceBalance {
+  const userEntries = entries.filter(
+    e => e.giverEmail === userEmail || e.receiverEmail === userEmail
+  );
+
+  const totalReceived = userEntries
+    .filter(e => e.receiverEmail === userEmail)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalGiven = userEntries
+    .filter(e => e.giverEmail === userEmail)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const settledCount = userEntries.filter(e => e.status === 'settled').length;
+  const activeCount = userEntries.filter(e => e.status === 'active').length;
+
+  const lastTransaction = userEntries.length > 0 ? userEntries[0].createdAt : undefined;
+
+  const balance = calculateUserBalance(userEmail, entries, expenses);
 
   return {
-    ...advance,
-    calculatedUsed,
-    calculatedRemaining,
-    settlementPercentage,
+    email: userEmail,
+    displayName: getDisplayName(userEmail),
+    balance,
+    totalReceived,
+    totalGiven,
+    settledCount,
+    activeCount,
+    lastTransaction,
   };
 }
 
 /**
- * Get all advance balances for a specific user
- */
-export function getUserAdvanceBalances(
-  userId: string,
-  advances: AdvanceBalance[]
-): AdvanceBalance[] {
-  return advances.filter(a => a.userId === userId && a.status === 'active');
-}
-
-/**
- * Get advance transaction history
+ * Get transaction history for an advance entry
  */
 export function getAdvanceTransactionHistory(
-  advanceId: string,
+  advanceEntryId: string,
   expenses: Expense[]
-): AdvanceTransaction[] {
+): AdvanceBalanceTransaction[] {
   return expenses
-    .filter(e => e.advanceBalanceId === advanceId && e.source === 'advance' && counted(e.status))
+    .filter(e => e.advanceEntryId === advanceEntryId && e.source === 'advance' && counted(e.status))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .map((e, idx) => ({
-      id: `txn_${advanceId}_${idx}`,
-      advanceBalanceId: advanceId,
+      id: `txn_${advanceEntryId}_${idx}`,
+      advanceEntryId: advanceEntryId,
       expenseId: e.id,
       amount: e.amount,
       category: e.category,
@@ -88,66 +124,62 @@ export function getAdvanceTransactionHistory(
  * Generate advance balance summary for a user
  */
 export function generateAdvanceBalanceSummary(
-  userId: string,
-  userName: string,
-  advances: AdvanceBalance[],
+  userEmail: string,
+  entries: AdvanceBalanceEntry[],
   expenses: Expense[]
 ): AdvanceBalanceSummary {
-  const userAdvances = advances.filter(a => a.userId === userId);
-
-  const totalAdvancesGiven = userAdvances.reduce((sum, a) => sum + a.originalAmount, 0);
-  const totalAdvancesUsed = userAdvances.reduce((sum, a) => {
-    return sum + calculateAdvanceUsed(a.id, expenses);
-  }, 0);
-  const totalRemaining = userAdvances.reduce((sum, a) => {
-    return sum + calculateAdvanceRemaining(a, expenses);
-  }, 0);
-
-  const activeAdvances = userAdvances.filter(a => a.status === 'active').length;
-  const settlementPercentage = totalAdvancesGiven > 0
-    ? Math.round((totalAdvancesUsed / totalAdvancesGiven) * 100)
-    : 0;
+  const userAdvanceBalance = getUserAdvanceBalance(userEmail, entries, expenses);
+  const userEntries = entries.filter(
+    e => e.giverEmail === userEmail || e.receiverEmail === userEmail
+  );
 
   // Get recent transactions
-  const allTransactions: AdvanceTransaction[] = [];
-  userAdvances.forEach(advance => {
-    allTransactions.push(...getAdvanceTransactionHistory(advance.id, expenses));
+  const allTransactions: AdvanceBalanceTransaction[] = [];
+  userEntries.forEach(entry => {
+    allTransactions.push(...getAdvanceTransactionHistory(entry.id, expenses));
   });
   const recentTransactions = allTransactions
     .sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime())
     .slice(0, 10);
 
   return {
-    userId,
-    userName,
-    totalAdvancesGiven,
-    totalAdvancesUsed,
-    totalRemaining,
-    activeAdvances,
-    settlementPercentage,
+    email: userEmail,
+    displayName: userAdvanceBalance.displayName,
+    balance: userAdvanceBalance.balance,
+    totalReceived: userAdvanceBalance.totalReceived,
+    totalGiven: userAdvanceBalance.totalGiven,
+    activeAdvances: userAdvanceBalance.activeCount,
     recentTransactions,
   };
 }
 
 /**
- * Validate advance balance creation
+ * Validate advance entry creation
  */
-export function validateAdvanceBalance(
-  userId: string,
-  originalAmount: number,
-  notes?: string
+export function validateAdvanceEntry(
+  giverName: string,
+  receiverName: string,
+  amount: number
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (!userId || userId.trim().length === 0) {
-    errors.push('User ID is required');
+  if (!giverName || giverName.trim().length === 0) {
+    errors.push('Giver name is required');
   }
 
-  if (originalAmount <= 0) {
+  if (!receiverName || receiverName.trim().length === 0) {
+    errors.push('Receiver name is required');
+  }
+
+  if (giverName.trim().toLowerCase() === receiverName.trim().toLowerCase()) {
+    errors.push('Giver and receiver cannot be the same person');
+  }
+
+  if (amount <= 0) {
     errors.push('Advance amount must be greater than 0');
   }
 
-  if (originalAmount > 10000000) {
+  if (amount > 10000000) {
     errors.push('Advance amount seems unusually high - verify correct value');
   }
 
@@ -158,75 +190,67 @@ export function validateAdvanceBalance(
 }
 
 /**
- * Check if advance balance can be settled
+ * Check if advance entry can be settled
  */
-export function canSettleAdvance(
-  advance: AdvanceBalance,
+export function canSettleEntry(
+  entry: AdvanceBalanceEntry,
   expenses: Expense[]
 ): boolean {
-  const remaining = calculateAdvanceRemaining(advance, expenses);
-  return remaining === 0; // Can only settle when fully used/returned
+  const remaining = calculateAdvanceRemaining(entry, expenses);
+  return remaining === 0; // Can only settle when fully used
 }
 
 /**
- * Get settlement details
+ * Get all user emails that have advance balances
  */
-export function getSettlementDetails(
-  advance: AdvanceBalance,
-  expenses: Expense[]
-): {
-  isFullyUsed: boolean;
-  usedAmount: number;
-  remainingAmount: number;
-  canSettle: boolean;
-  settlementDate?: string;
-} {
-  const usedAmount = calculateAdvanceUsed(advance.id, expenses);
-  const remainingAmount = calculateAdvanceRemaining(advance, expenses);
-  const isFullyUsed = remainingAmount === 0;
-  const canSettle = isFullyUsed;
+export function getAdvanceUsers(
+  entries: AdvanceBalanceEntry[]
+): string[] {
+  const users = new Set<string>();
 
-  return {
-    isFullyUsed,
-    usedAmount,
-    remainingAmount,
-    canSettle,
-    settlementDate: canSettle ? new Date().toISOString() : undefined,
-  };
+  entries.forEach(entry => {
+    if (entry.giverEmail && entry.giverEmail !== 'others') users.add(entry.giverEmail);
+    if (entry.receiverEmail && entry.receiverEmail !== 'others') users.add(entry.receiverEmail);
+  });
+
+  return Array.from(users);
 }
 
 /**
- * Get advance balance statistics
+ * Get total outstanding advances (what everyone owes combined)
  */
-export function getAdvanceStatistics(
-  advances: AdvanceBalance[],
+export function getTotalOutstanding(
+  entries: AdvanceBalanceEntry[],
   expenses: Expense[]
-): {
-  totalAdvancesIssued: number;
-  totalUsed: number;
-  totalRemaining: number;
-  averageSettlement: number;
-  activesCount: number;
-  settledCount: number;
-} {
-  const totalAdvancesIssued = advances.reduce((sum, a) => sum + a.originalAmount, 0);
-  const totalUsed = advances.reduce((sum, a) => sum + calculateAdvanceUsed(a.id, expenses), 0);
-  const totalRemaining = advances.reduce((sum, a) => sum + calculateAdvanceRemaining(a, expenses), 0);
+): number {
+  return entries
+    .filter(e => e.status === 'active')
+    .reduce((sum, e) => sum + calculateAdvanceRemaining(e, expenses), 0);
+}
 
-  const completedAdvances = advances.filter(a => a.status === 'settled');
-  const averageSettlement = completedAdvances.length > 0
-    ? completedAdvances.reduce((sum, a) => sum + a.originalAmount, 0) / completedAdvances.length
+/**
+ * Enrich advance entry with calculated values
+ */
+export interface AdvanceEntryWithCalculations extends AdvanceBalanceEntry {
+  used: number;
+  remaining: number;
+  settlementPercentage: number;
+}
+
+export function enrichAdvanceEntry(
+  entry: AdvanceBalanceEntry,
+  expenses: Expense[]
+): AdvanceEntryWithCalculations {
+  const used = calculateAdvanceUsed(entry.id, expenses);
+  const remaining = calculateAdvanceRemaining(entry, expenses);
+  const settlementPercentage = entry.amount > 0
+    ? Math.round((used / entry.amount) * 100)
     : 0;
 
-  const activesCount = advances.filter(a => a.status === 'active').length;
-  const settledCount = completedAdvances.length;
-
   return {
-    totalAdvancesIssued,
-    totalUsed,
-    totalRemaining,
-    averageSettlement: Math.round(averageSettlement),
-    activesCount,
-    settledCount,
+    ...entry,
+    used,
+    remaining,
+    settlementPercentage,
   };
 }
