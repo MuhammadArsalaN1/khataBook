@@ -35,7 +35,9 @@ export interface Expense {
   isRecurring: boolean;
   recurringMonths?: number[];
   tags?: string[];
-  advanceId?: string;   // if paid from an advance/float; '' or absent = main funds
+  advanceId?: string;   // if paid from an old advance/float; '' or absent = main funds
+  source?: AdvanceBalanceSource; // 'advance' | 'personal' (default: 'personal')
+  advanceEntryId?: string;       // If source is 'advance', which entry
 }
 
 export type AdvanceDirection = 'given' | 'received';
@@ -266,8 +268,3 @@ export interface AdvanceBalanceSummary {
   recentTransactions: AdvanceBalanceTransaction[];
 }
 
-export interface Expense {
-  // ... existing fields ...
-  source?: AdvanceBalanceSource; // 'advance' | 'personal' (default: 'personal')
-  advanceEntryId?: string;       // If source is 'advance', which entry
-}
