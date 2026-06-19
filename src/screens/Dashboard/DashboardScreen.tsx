@@ -92,7 +92,7 @@ export default function DashboardScreen() {
 
         {/* Pending Approvals */}
         {currentUser?.role === 'admin' && pendingCount > 0 && (
-          <TouchableOpacity style={styles.pendingBanner} onPress={() => navigation.navigate('Expenses', { filter: 'pending' })}>
+          <TouchableOpacity style={styles.pendingBanner} onPress={() => navigation.navigate('Expenses')}>
             <Text style={styles.pendingText}>🔔 {pendingCount} expense(s) pending approval → Review</Text>
           </TouchableOpacity>
         )}

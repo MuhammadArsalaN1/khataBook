@@ -1,5 +1,5 @@
 import { RecurrenceRule, Expense, ExpenseStatus } from '../types';
-import { addDays, addWeeks, addMonths, addQuarters, addYears, setDate } from 'date-fns';
+import { addDays, addWeeks, addMonths, addQuarters, addYears } from 'date-fns';
 
 /** Get the next due date based on recurrence frequency. */
 export function getNextDueDate(rule: RecurrenceRule): Date {
@@ -16,7 +16,10 @@ export function getNextDueDate(rule: RecurrenceRule): Date {
     case 'monthly':
       // Use dayOfMonth if specified, else day-of-month from nextDueDate
       const day = rule.dayOfMonth ?? current.getDate();
-      return setDate(addMonths(current, 1), day);
+      const nextMonth = addMonths(current, 1);
+      const result = new Date(nextMonth);
+      result.setDate(day);
+      return result;
     case 'quarterly':
       return addQuarters(current, 1);
     case 'yearly':
