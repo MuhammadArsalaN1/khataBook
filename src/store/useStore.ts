@@ -82,17 +82,84 @@ let unsubBudgetPools: (() => void) | null = null;
 let unsubRecurrenceRules: (() => void) | null = null;
 
 function startListeners() {
-  unsubExpenses = subscribeExpenses(expenses => setState({ expenses, dataLoading: false }));
-  unsubLogs = subscribeLogs(activityLogs => setState({ activityLogs }));
-  unsubBudgets = subscribeBudgets(budgets => setState({ budgets }));
-  unsubIncomes = subscribeIncomes(incomes => setState({ incomes }));
-  unsubWallets = subscribeWallets(wallets => setState({ wallets }));
-  unsubSavingsGoals = subscribeSavingsGoals(savingsGoals => setState({ savingsGoals }));
-  unsubTemplates = subscribeTemplates(templates => setState({ templates }));
-  unsubAdvances = subscribeAdvances(advances => setState({ advances }));
-  unsubAdvanceBalanceEntries = subscribeAdvanceBalanceEntries(advanceBalanceEntries => setState({ advanceBalanceEntries }));
-  unsubBudgetPools = subscribeBudgetPools(budgetPools => setState({ budgetPools }));
-  unsubRecurrenceRules = subscribeRecurrenceRules(recurrenceRules => setState({ recurrenceRules }));
+  console.log('🔄 Starting Firestore listeners...');
+  unsubExpenses = subscribeExpenses(
+    expenses => {
+      console.log(`✅ Synced ${expenses.length} expenses`);
+      setState({ expenses, dataLoading: false });
+    },
+    err => console.error('❌ Expenses sync error:', err)
+  );
+  unsubLogs = subscribeLogs(
+    activityLogs => {
+      console.log(`✅ Synced ${activityLogs.length} activity logs`);
+      setState({ activityLogs });
+    },
+    err => console.error('❌ Logs sync error:', err)
+  );
+  unsubBudgets = subscribeBudgets(
+    budgets => {
+      console.log(`✅ Synced ${budgets.length} budgets`);
+      setState({ budgets });
+    },
+    err => console.error('❌ Budgets sync error:', err)
+  );
+  unsubIncomes = subscribeIncomes(
+    incomes => {
+      console.log(`✅ Synced ${incomes.length} incomes`);
+      setState({ incomes });
+    },
+    err => console.error('❌ Incomes sync error:', err)
+  );
+  unsubWallets = subscribeWallets(
+    wallets => {
+      console.log(`✅ Synced ${wallets.length} wallets`);
+      setState({ wallets });
+    },
+    err => console.error('❌ Wallets sync error:', err)
+  );
+  unsubSavingsGoals = subscribeSavingsGoals(
+    savingsGoals => {
+      console.log(`✅ Synced ${savingsGoals.length} savings goals`);
+      setState({ savingsGoals });
+    },
+    err => console.error('❌ Savings goals sync error:', err)
+  );
+  unsubTemplates = subscribeTemplates(
+    templates => {
+      console.log(`✅ Synced ${templates.length} templates`);
+      setState({ templates });
+    },
+    err => console.error('❌ Templates sync error:', err)
+  );
+  unsubAdvances = subscribeAdvances(
+    advances => {
+      console.log(`✅ Synced ${advances.length} advances`);
+      setState({ advances });
+    },
+    err => console.error('❌ Advances sync error:', err)
+  );
+  unsubAdvanceBalanceEntries = subscribeAdvanceBalanceEntries(
+    advanceBalanceEntries => {
+      console.log(`✅ Synced ${advanceBalanceEntries.length} advance balance entries`);
+      setState({ advanceBalanceEntries });
+    },
+    err => console.error('❌ Advance balance entries sync error:', err)
+  );
+  unsubBudgetPools = subscribeBudgetPools(
+    budgetPools => {
+      console.log(`✅ Synced ${budgetPools.length} budget pools`);
+      setState({ budgetPools });
+    },
+    err => console.error('❌ Budget pools sync error:', err)
+  );
+  unsubRecurrenceRules = subscribeRecurrenceRules(
+    recurrenceRules => {
+      console.log(`✅ Synced ${recurrenceRules.length} recurrence rules`);
+      setState({ recurrenceRules });
+    },
+    err => console.error('❌ Recurrence rules sync error:', err)
+  );
 }
 
 function stopListeners() {
@@ -536,6 +603,22 @@ export function useStore() {
     });
   }, []);
 
+  // ── Sync ───────────────────────────────────────────────────────────────────────
+  const syncData = useCallback(async () => {
+    console.log('🔄 Manual sync triggered...');
+    setState({ dataLoading: true });
+    try {
+      stopListeners();
+      setTimeout(() => {
+        startListeners();
+        setState({ dataLoading: false });
+      }, 500);
+    } catch (err) {
+      console.error('Sync error:', err);
+      setState({ dataLoading: false });
+    }
+  }, []);
+
   // ── Theme ─────────────────────────────────────────────────────────────────────
   const toggleTheme = useCallback(async () => {
     const newTheme: Theme = state.theme === 'light' ? 'dark' : 'light';
@@ -577,6 +660,7 @@ export function useStore() {
     createRecurrenceRule,
     updateRecurrenceRule,
     deleteRecurrenceRule,
+    syncData,
     toggleTheme,
   };
 }

@@ -20,12 +20,27 @@ const STATUS_COLORS: Record<ExpenseStatus, string> = {
 const CAT_PALETTE = COLORS.chart;
 
 export default function ExpensesScreenPremium() {
-  const { expenses, currentUser, deleteExpense, approveExpense, advances } = useStore();
+  const { expenses, currentUser, deleteExpense, approveExpense, advances, advanceBalanceEntries, syncData, dataLoading } = useStore();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
   const fiscal = getActiveFiscalMonth();
   const [view, setView] = useState<'charts' | 'entries'>('entries');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await syncData?.();
+    setRefreshing(false);
+  };
+
+  // Count entries by status
+  const statusCounts = useMemo(() => ({
+    draft: scoped.filter(e => e.status === 'draft').length,
+    pending: scoped.filter(e => e.status === 'pending').length,
+    approved: scoped.filter(e => e.status === 'approved').length,
+    rejected: scoped.filter(e => e.status === 'rejected').length,
+  }), [scoped]);
   const [scope, setScope] = useState<'month' | 'all'>('month');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<ExpenseType | 'all'>('all');
@@ -100,7 +115,11 @@ export default function ExpensesScreenPremium() {
             </View>
           </View>
         </View>
-        {item.advanceId ? (
+        {item.source === 'advance' && item.advanceEntryId ? (
+          <Text style={styles.sourceBadge}>
+            🤝 From {advanceBalanceEntries.find(a => a.id === item.advanceEntryId)?.giverName ?? 'advance'}
+          </Text>
+        ) : item.advanceId ? (
           <Text style={styles.sourceBadge}>
             🤝 From {advances.find(a => a.id === item.advanceId)?.person ?? 'advance'}
           </Text>
@@ -218,14 +237,24 @@ export default function ExpensesScreenPremium() {
             ))}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            {(['all', 'pending', 'approved', 'rejected'] as const).map(s => (
-              <TouchableOpacity key={s} style={[styles.filterChip, filterStatus === s && styles.filterChipActive]} onPress={() => setFilterStatus(s)}>
-                <Text style={[styles.filterText, filterStatus === s && styles.filterTextActive]}>{s === 'all' ? 'All Status' : s.charAt(0).toUpperCase() + s.slice(1)}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity key='all' style={[styles.filterChip, filterStatus === 'all' && styles.filterChipActive]} onPress={() => setFilterStatus('all')}>
+              <Text style={[styles.filterText, filterStatus === 'all' && styles.filterTextActive]}>All Status ({scoped.length})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity key='draft' style={[styles.filterChip, filterStatus === 'draft' && styles.filterChipActive]} onPress={() => setFilterStatus('draft')}>
+              <Text style={[styles.filterText, filterStatus === 'draft' && styles.filterTextActive]}>Draft {statusCounts.draft > 0 ? `(${statusCounts.draft})` : ''}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity key='pending' style={[styles.filterChip, filterStatus === 'pending' && styles.filterChipActive]} onPress={() => setFilterStatus('pending')}>
+              <Text style={[styles.filterText, filterStatus === 'pending' && styles.filterTextActive]}>Pending {statusCounts.pending > 0 ? `(${statusCounts.pending})` : ''}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity key='approved' style={[styles.filterChip, filterStatus === 'approved' && styles.filterChipActive]} onPress={() => setFilterStatus('approved')}>
+              <Text style={[styles.filterText, filterStatus === 'approved' && styles.filterTextActive]}>Approved {statusCounts.approved > 0 ? `(${statusCounts.approved})` : ''}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity key='rejected' style={[styles.filterChip, filterStatus === 'rejected' && styles.filterChipActive]} onPress={() => setFilterStatus('rejected')}>
+              <Text style={[styles.filterText, filterStatus === 'rejected' && styles.filterTextActive]}>Rejected {statusCounts.rejected > 0 ? `(${statusCounts.rejected})` : ''}</Text>
+            </TouchableOpacity>
           </ScrollView>
           <View style={styles.summaryStrip}>
-            <Text style={styles.summaryStripText}>{filtered.length} entries</Text>
+            <Text style={styles.summaryStripText}>{filtered.length} entries {scoped.length !== filtered.length ? `(${scoped.length} total)` : ''}</Text>
             <Text style={styles.summaryStripTotal}>{formatMoney(filtered.reduce((s, e) => e.status !== 'rejected' && e.status !== 'pending' ? s + e.amount : s, 0))}</Text>
           </View>
         </>
@@ -241,9 +270,14 @@ export default function ExpensesScreenPremium() {
           <Text style={styles.title}>Expenses</Text>
           <Text style={styles.subtitle}>{scope === 'month' ? fiscal.label : 'All time'}</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddExpense')}>
-          <Text style={styles.addBtnText}>+ Add</Text>
-        </TouchableOpacity>
+        <View style={styles.topBarActions}>
+          <TouchableOpacity style={styles.syncBtn} onPress={handleRefresh} disabled={refreshing || dataLoading}>
+            <Text style={styles.syncBtnText}>{refreshing || dataLoading ? '🔄' : '🔃'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddExpense')}>
+            <Text style={styles.addBtnText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* View toggle */}
@@ -284,6 +318,9 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
   title: { fontSize: responsiveFontSize(24), fontWeight: '800', color: COLORS.text },
   subtitle: { fontSize: responsiveFontSize(12), color: COLORS.textLight, fontWeight: '500', marginTop: 2 },
+  topBarActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  syncBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F5F5F0', alignItems: 'center', justifyContent: 'center' },
+  syncBtnText: { fontSize: 18 },
   addBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(13) },
   viewToggle: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 14, backgroundColor: '#F5F5F0', borderRadius: 12, padding: 4 },
