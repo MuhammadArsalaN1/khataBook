@@ -6,9 +6,21 @@ export const USERS: User[] = [
 ];
 
 export const CATEGORIES: Record<ExpenseType, string[]> = {
-  personal: ['Grocery','Fuel','Utility Bills','Internet','Medical','Education','Dining','Shopping','Travel','Entertainment','Subscriptions','Miscellaneous'],
-  office: ['Rent','Electricity','Internet','Hosting & Domains','Software Subscriptions','Marketing & Ads','Salaries','Office Supplies','Equipment','Travel','Maintenance','Miscellaneous'],
-  farm: ['Feed','Medicine','Vaccination','Labor','Transportation','Water','Electricity','Shed Maintenance','Medical Treatment','Miscellaneous'],
+  personal: [
+    'Grocery','Fuel','Utility Bills','Internet','Medical','Medicine','Health Checkup','Education','Dining','Shopping','Travel',
+    'Entertainment','Subscriptions','Phone & Mobile','Insurance','Books','Hobbies','Clothing','Personal Care','Beauty & Spa',
+    'Home Maintenance','Furniture','Pet Food','Pet Care','Pet Medication','Appliances','Miscellaneous'
+  ],
+  office: [
+    'Rent','Electricity','Internet','Hosting & Domains','Software Subscriptions','Marketing & Ads','Salaries','Office Supplies',
+    'Equipment','Travel','Maintenance','Office Furniture','Cleaning Supplies','Employee Meals','Training & Development',
+    'Legal & Accounting','Utilities','Repairs','Pest Control','Security','Miscellaneous'
+  ],
+  farm: [
+    'Feed','Fodder & Hay','Medicine','Veterinary Services','Vaccination','Labor','Transportation','Water','Electricity',
+    'Shed Maintenance','Medical Treatment','Equipment & Tools','Breeding Stock','Supplements','Grazing & Pasture',
+    'Gate & Fencing','Bedding Material','Quarantine Care','Miscellaneous Supplies'
+  ],
 };
 
 export const COLORS = {
@@ -105,15 +117,23 @@ export const TYPE_ICONS: Record<ExpenseType, string> = {
 export const CATEGORY_EMOJI: Record<string, string> = {
   // personal
   Grocery: '🛒', Fuel: '⛽', 'Utility Bills': '💡', Internet: '🌐', Medical: '💊',
-  Education: '📚', Dining: '🍽️', Shopping: '🛍️', Travel: '✈️', Entertainment: '🎬',
-  Subscriptions: '📱',
+  Medicine: '💊', 'Health Checkup': '🏥', Education: '📚', Dining: '🍽️', Shopping: '🛍️',
+  Travel: '✈️', Entertainment: '🎬', Subscriptions: '📱', 'Phone & Mobile': '📞',
+  Insurance: '🛡️', Books: '📖', Hobbies: '🎨', Clothing: '👕', 'Personal Care': '🧴',
+  'Beauty & Spa': '💇', 'Home Maintenance': '🔧', Furniture: '🪑', 'Pet Food': '🍖',
+  'Pet Care': '🐾', 'Pet Medication': '💊', Appliances: '🔌',
   // office
   Rent: '🏠', Electricity: '⚡', 'Hosting & Domains': '🖥️', 'Software Subscriptions': '💻',
   'Marketing & Ads': '📣', Salaries: '💼', 'Office Supplies': '🗂️', Equipment: '🔧',
-  Maintenance: '🔨',
+  Maintenance: '🔨', 'Office Furniture': '🪑', 'Cleaning Supplies': '🧹', 'Employee Meals': '🍱',
+  'Training & Development': '📚', 'Legal & Accounting': '⚖️', Utilities: '💡', Repairs: '🔩',
+  'Pest Control': '🐛', Security: '🔒',
   // farm
-  Feed: '🌾', Medicine: '💉', Vaccination: '🩹', Labor: '👷', Transportation: '🚛',
-  Water: '💧', 'Shed Maintenance': '🏚️', 'Medical Treatment': '🏥',
+  Feed: '🌾', 'Fodder & Hay': '🌾', Vaccination: '🩹', 'Veterinary Services': '🏥',
+  Labor: '👷', Water: '💧', 'Shed Maintenance': '🏚️', 'Medical Treatment': '🏥',
+  'Equipment & Tools': '🔧', 'Breeding Stock': '🐐', Supplements: '💊', 'Grazing & Pasture': '🌱',
+  'Gate & Fencing': '🚪', 'Bedding Material': '🛏️', 'Quarantine Care': '🏥',
+  'Miscellaneous Supplies': '📦',
   // shared
   Miscellaneous: '📦',
 };

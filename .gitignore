@@ -31,7 +31,16 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.local
 .env*.local
+.env*.example
+
+# Firebase sensitive files
+google-services.json
+google-services.json.bak
+*.jks
+*.keystore
 
 # typescript
 *.tsbuildinfo
