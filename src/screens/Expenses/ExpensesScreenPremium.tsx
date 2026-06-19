@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<ExpenseStatus, string> = {
 const CAT_PALETTE = COLORS.chart;
 
 export default function ExpensesScreenPremium() {
-  const { expenses, currentUser, deleteExpense, approveExpense, advances } = useStore();
+  const { expenses, currentUser, deleteExpense, approveExpense, advances, advanceBalanceEntries } = useStore();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
@@ -253,6 +253,9 @@ export default function ExpensesScreenPremium() {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.viewBtn, view === 'charts' && styles.viewBtnActive]} onPress={() => setView('charts')}>
           <Text style={[styles.viewBtnText, view === 'charts' && styles.viewBtnTextActive]}>📊 Charts</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.viewBtn, view === 'settlements' && styles.viewBtnActive]} onPress={() => navigation.navigate('AdvanceSettlements')}>
+          <Text style={[styles.viewBtnText, view === 'settlements' && styles.viewBtnTextActive]}>🤝 Settlements</Text>
         </TouchableOpacity>
       </View>
 

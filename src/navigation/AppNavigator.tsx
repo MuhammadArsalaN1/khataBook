@@ -20,6 +20,8 @@ import FundsScreen from '../screens/Funds/FundsScreen';
 import PoolsScreen from '../screens/Pools/PoolsScreen';
 import TrendsScreen from '../screens/Analytics/TrendsScreen';
 import RecurrenceScreen from '../screens/Expenses/RecurrenceScreen';
+import AdvanceSettlementsScreen from '../screens/Expenses/AdvanceSettlementsScreen';
+import AdvanceBalanceScreen from '../screens/AdvanceBalance/AdvanceBalanceScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -107,6 +109,8 @@ function AppStack() {
       <Stack.Screen name="Pools" component={PoolsScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Trends" component={TrendsScreen} options={{ presentation: 'card' }} />
       <Stack.Screen name="Recurrence" component={RecurrenceScreen} options={{ presentation: 'card' }} />
+      <Stack.Screen name="AdvanceSettlements" component={AdvanceSettlementsScreen} options={{ presentation: 'card' }} />
+      <Stack.Screen name="AdvanceBalance" component={AdvanceBalanceScreen} options={{ presentation: 'card' }} />
     </Stack.Navigator>
   );
 }

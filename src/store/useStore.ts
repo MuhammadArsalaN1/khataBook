@@ -11,8 +11,9 @@ import {
   subscribeAdvances, upsertAdvanceDoc, deleteAdvanceDoc,
   subscribeBudgetPools, upsertBudgetPoolDoc, deleteBudgetPoolDoc,
   subscribeRecurrenceRules, upsertRecurrenceRuleDoc, deleteRecurrenceRuleDoc, updateRecurrenceRuleDoc,
+  subscribeAdvanceBalanceEntries, upsertAdvanceBalanceEntry, updateAdvanceBalanceEntry, deleteAdvanceBalanceEntry as deleteAdvanceBalanceEntryDoc,
 } from '../database/storage';
-import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance, BudgetPool, RecurrenceRule, Theme } from '../types';
+import { Expense, ActivityLog, Budget, User, ExpenseType, Wallet, SavingsGoal, ExpenseTemplate, Currency, Advance, BudgetPool, RecurrenceRule, Theme, AdvanceBalanceEntry } from '../types';
 import { USERS, DEFAULT_EXCHANGE_RATES } from '../constants';
 import { ExchangeRates } from '../utils/currency';
 import { saveCredentials, getCredentials, clearCredentials, promptBiometric } from '../utils/biometric';
@@ -28,6 +29,7 @@ interface AppState {
   savingsGoals: SavingsGoal[];
   templates: ExpenseTemplate[];
   advances: Advance[];
+  advanceBalanceEntries: AdvanceBalanceEntry[];
   recurrenceRules: RecurrenceRule[];
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
@@ -49,6 +51,7 @@ let state: AppState = {
   savingsGoals: [],
   templates: [],
   advances: [],
+  advanceBalanceEntries: [],
   recurrenceRules: [],
   currentUser: null,
   firebaseUser: null,
@@ -74,6 +77,7 @@ let unsubWallets: (() => void) | null = null;
 let unsubSavingsGoals: (() => void) | null = null;
 let unsubTemplates: (() => void) | null = null;
 let unsubAdvances: (() => void) | null = null;
+let unsubAdvanceBalanceEntries: (() => void) | null = null;
 let unsubBudgetPools: (() => void) | null = null;
 let unsubRecurrenceRules: (() => void) | null = null;
 
@@ -86,6 +90,7 @@ function startListeners() {
   unsubSavingsGoals = subscribeSavingsGoals(savingsGoals => setState({ savingsGoals }));
   unsubTemplates = subscribeTemplates(templates => setState({ templates }));
   unsubAdvances = subscribeAdvances(advances => setState({ advances }));
+  unsubAdvanceBalanceEntries = subscribeAdvanceBalanceEntries(advanceBalanceEntries => setState({ advanceBalanceEntries }));
   unsubBudgetPools = subscribeBudgetPools(budgetPools => setState({ budgetPools }));
   unsubRecurrenceRules = subscribeRecurrenceRules(recurrenceRules => setState({ recurrenceRules }));
 }
@@ -99,6 +104,7 @@ function stopListeners() {
   unsubSavingsGoals?.(); unsubSavingsGoals = null;
   unsubTemplates?.(); unsubTemplates = null;
   unsubAdvances?.(); unsubAdvances = null;
+  unsubAdvanceBalanceEntries?.(); unsubAdvanceBalanceEntries = null;
   unsubBudgetPools?.(); unsubBudgetPools = null;
   unsubRecurrenceRules?.(); unsubRecurrenceRules = null;
 }
@@ -132,6 +138,7 @@ onAuthStateChanged(auth, async (fbUser) => {
       savingsGoals: [],
       templates: [],
       advances: [],
+      advanceBalanceEntries: [],
       recurrenceRules: [],
       authLoading: false,
       dataLoading: false,
@@ -456,6 +463,79 @@ export function useStore() {
     await deleteRecurrenceRuleDoc(id);
   }, []);
 
+  // ── Advance Balance Entries ───────────────────────────────────────────────────
+  const createAdvanceBalanceEntry = useCallback(async (entry: Omit<AdvanceBalanceEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const id = `adv_bal_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const now = new Date().toISOString();
+    const newEntry: AdvanceBalanceEntry = {
+      ...entry,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await upsertAdvanceBalanceEntry(newEntry);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'add',
+      expenseId: id,
+      details: entry.direction === 'given'
+        ? `Gave advance of Rs. ${entry.amount.toLocaleString()} to ${entry.receiverName}`
+        : `Received advance of Rs. ${entry.amount.toLocaleString()} from ${entry.giverName}`,
+    });
+    return newEntry;
+  }, []);
+
+  const recordAdvanceReturn = useCallback(async (id: string, amount: number, method: string, notes?: string) => {
+    const entry = state.advanceBalanceEntries.find(e => e.id === id);
+    if (!entry) throw new Error('Advance entry not found');
+
+    const totalReturned = entry.returnedAmount + amount;
+    if (totalReturned > entry.amount) {
+      throw new Error(`Cannot return more than original amount (${entry.amount}). Already returned: ${entry.returnedAmount}`);
+    }
+
+    const newReturn = {
+      id: `ret_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      date: new Date().toISOString().split('T')[0],
+      amount,
+      method,
+      notes,
+      recordedBy: state.currentUser?.id ?? '',
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedEntry: AdvanceBalanceEntry = {
+      ...entry,
+      returnedAmount: totalReturned,
+      pendingAmount: entry.amount - totalReturned,
+      returnHistory: [...(entry.returnHistory || []), newReturn],
+      status: totalReturned === entry.amount ? 'settled' : 'active',
+      updatedAt: new Date().toISOString(),
+    };
+
+    await updateAdvanceBalanceEntry(id, updatedEntry);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'edit',
+      expenseId: id,
+      details: `Recorded advance return of Rs. ${amount.toLocaleString()} via ${method}`,
+    });
+    return updatedEntry;
+  }, []);
+
+  const deleteAdvanceBalanceEntry = useCallback(async (id: string) => {
+    await deleteAdvanceBalanceEntryDoc(id);
+    logActivity({
+      userId: state.currentUser?.id ?? '',
+      userName: state.currentUser?.name ?? '',
+      action: 'delete',
+      expenseId: id,
+      details: 'Deleted advance balance entry',
+    });
+  }, []);
+
   // ── Theme ─────────────────────────────────────────────────────────────────────
   const toggleTheme = useCallback(async () => {
     const newTheme: Theme = state.theme === 'light' ? 'dark' : 'light';
@@ -488,6 +568,9 @@ export function useStore() {
     settleAdvance,
     reopenAdvance,
     deleteAdvance,
+    createAdvanceBalanceEntry,
+    recordAdvanceReturn,
+    deleteAdvanceBalanceEntry,
     saveBudgetPool,
     updateBudgetPool,
     deleteBudgetPool,
