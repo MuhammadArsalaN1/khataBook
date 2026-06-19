@@ -109,10 +109,10 @@ export default function DashboardScreenPremium() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* HEADER - Full width gradient with content inside */}
-        <LinearGradient colors={GRADIENTS.header as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
+    <View style={styles.container}>
+      {/* HEADER - Extended to top */}
+      <LinearGradient colors={GRADIENTS.header as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerGradient}>
+        <SafeAreaView style={styles.headerSafeArea}>
           <View style={styles.headerContent}>
             <View style={styles.headerTop}>
               <View>
@@ -134,8 +134,12 @@ export default function DashboardScreenPremium() {
               <Text style={styles.balanceStatus}>{funds.mainBalance >= 0 ? '✓ Positive' : '⚠️ Deficit'}</Text>
             </View>
           </View>
-        </LinearGradient>
+        </SafeAreaView>
+      </LinearGradient>
 
+      {/* Content Area */}
+      <SafeAreaView style={styles.safe}>
+        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* KEY METRICS - Income, Expense, Savings */}
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
@@ -396,15 +400,18 @@ export default function DashboardScreenPremium() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#FAFAF7' },
   safe: { flex: 1, backgroundColor: '#FAFAF7' },
   scroll: { flex: 1 },
   headerGradient: { width: '100%' },
-  headerContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
+  headerSafeArea: { paddingHorizontal: 16 },
+  headerContent: { paddingBottom: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   greeting: { fontSize: responsiveFontSize(20), fontWeight: '800', color: '#1A1A1A' },
   headerSubtitle: { fontSize: responsiveFontSize(12), color: 'rgba(26,26,26,0.6)', marginTop: 2, fontWeight: '600' },
