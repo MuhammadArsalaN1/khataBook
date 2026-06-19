@@ -15,6 +15,7 @@ import { fundsSummary } from '../../utils/funds';
 import { poolsSummary } from '../../utils/pools';
 import { getSpendingTrends, compareSpending } from '../../utils/trends';
 import { calculateSavingsPotential, getSpendingVelocity, dailySpendRate, daysRemainingInMonth } from '../../utils/forecast';
+import { analyzeSpendingPatterns, getVelocityInsight } from '../../utils/spendingPatterns';
 
 const W = Dimensions.get('window').width;
 
@@ -49,6 +50,9 @@ export default function DashboardScreenPremium() {
   const funds = useMemo(() => fundsSummary(incomes, expenses, advances), [incomes, expenses, advances]);
   const currentPools = useMemo(() => budgetPools.filter(p => p.month === month && p.year === year), [budgetPools, month, year]);
   const poolData = useMemo(() => poolsSummary(currentPools, expenses), [currentPools, expenses]);
+
+  const smartAnalysis = useMemo(() => analyzeSpendingPatterns(expenses), [expenses]);
+  const velocityInsight = useMemo(() => getVelocityInsight(smartAnalysis.patterns, smartAnalysis.predictions), [smartAnalysis]);
 
   const insights = useMemo(() => ({
     savings: calculateSavingsPotential(expenses),
@@ -206,41 +210,65 @@ export default function DashboardScreenPremium() {
           </View>
         </View>
 
-        {/* SPENDING VELOCITY & FORECAST */}
+        {/* INTELLIGENT SPENDING ANALYSIS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚡ Spending Velocity</Text>
-          <View style={[styles.card, { backgroundColor: insights.velocity.isAccelerating ? '#FFE5E5' : '#E5F5FF' }]}>
+          <Text style={styles.sectionTitle}>🤖 AI Spending Analysis</Text>
+
+          {/* Velocity Insight */}
+          <View style={[styles.card, {
+            backgroundColor: velocityInsight.trend === 'accelerating' ? '#FFE5E5' : velocityInsight.trend === 'decreasing' ? '#ECFDF5' : '#E5F5FF',
+            marginBottom: 10
+          }]}>
             <View style={styles.velocityHeader}>
-              <Text style={[styles.velocityLabel, { color: insights.velocity.isAccelerating ? '#991B1B' : '#0066CC' }]}>
-                {insights.velocity.isAccelerating ? '📈 Accelerating' : '📉 Normalizing'}
-              </Text>
-              <Text style={[styles.velocityPercent, { color: insights.velocity.isAccelerating ? '#991B1B' : '#0066CC' }]}>
-                {Math.abs(Math.round(insights.velocity.changePercent))}%
+              <Text style={[styles.velocityLabel, {
+                color: velocityInsight.trend === 'accelerating' ? '#991B1B' : velocityInsight.trend === 'decreasing' ? '#166534' : '#0066CC'
+              }]}>
+                {velocityInsight.trend === 'accelerating' ? '📈 Accelerating' : velocityInsight.trend === 'decreasing' ? '📉 Decreasing' : '➡️ Stable'}
               </Text>
             </View>
-            <Text style={[styles.velocityText, { color: insights.velocity.isAccelerating ? '#991B1B' : '#0066CC' }]}>
-              First week: {formatMoney(insights.velocity.firstWeekDaily)}/day | Last 7 days: {formatMoney(insights.velocity.lastWeekDaily)}/day
+            <Text style={[styles.velocityText, {
+              color: velocityInsight.trend === 'accelerating' ? '#991B1B' : velocityInsight.trend === 'decreasing' ? '#166534' : '#0066CC'
+            }]}>
+              {velocityInsight.impact}
             </Text>
+            <Text style={[styles.actionText, { marginTop: 8 }]}>{velocityInsight.action}</Text>
           </View>
 
-          {/* Forecast */}
-          <View style={[styles.card, { marginTop: 10, backgroundColor: '#F0F9FF' }]}>
-            <Text style={styles.cardLabel}>📅 Month Forecast</Text>
-            <View style={styles.forecastRow}>
-              <View style={styles.forecastCol}>
-                <Text style={styles.forecastLabel}>Daily Rate</Text>
-                <Text style={styles.forecastValue}>{formatMoney(dailyRate)}</Text>
-              </View>
-              <View style={styles.forecastCol}>
-                <Text style={styles.forecastLabel}>Days Left</Text>
-                <Text style={styles.forecastValue}>{daysLeft} days</Text>
-              </View>
-              <View style={styles.forecastCol}>
-                <Text style={styles.forecastLabel}>Projected</Text>
-                <Text style={styles.forecastValue}>{formatPKRCompact(dailyRate * daysLeft)}</Text>
-              </View>
+          {/* Upcoming Predictions */}
+          {smartAnalysis.predictions.length > 0 && (
+            <View style={[styles.card, { marginBottom: 10 }]}>
+              <Text style={styles.cardLabel}>🔮 Predicted Expenses (Next 7 Days)</Text>
+              {smartAnalysis.predictions.filter(p => p.daysUntil <= 7).map((pred, idx) => (
+                <View key={idx} style={[styles.predictionRow, idx > 0 && { borderTopWidth: 1, borderTopColor: '#E5E5E5', paddingTop: 10, marginTop: 10 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.predictionCategory}>{pred.category}</Text>
+                    <Text style={styles.predictionMeta}>{pred.reason}</Text>
+                  </View>
+                  <View style={styles.predictionRight}>
+                    <Text style={styles.predictionAmount}>{formatMoney(pred.predictedAmount)}</Text>
+                    <Text style={styles.predictionDays}>{pred.daysUntil === 0 ? 'Today' : `In ${pred.daysUntil}d`}</Text>
+                    <Text style={styles.predictionConfidence}>{Math.round(pred.confidence * 100)}% sure</Text>
+                  </View>
+                </View>
+              ))}
             </View>
+          )}
+
+          {/* Recommendation */}
+          <View style={[styles.card, { backgroundColor: '#FFFAED', borderLeftWidth: 4, borderLeftColor: '#F59E0B' }]}>
+            <Text style={styles.cardLabel}>💡 Smart Recommendation</Text>
+            <Text style={styles.recommendationText}>{smartAnalysis.recommendation}</Text>
+            {smartAnalysis.savingsPotential && smartAnalysis.savingsPotential !== 'Insufficient data' && (
+              <Text style={styles.savingsPotentialText}>💰 {smartAnalysis.savingsPotential}</Text>
+            )}
           </View>
+
+          {/* Risk Warning */}
+          {smartAnalysis.riskWarning && (
+            <View style={[styles.card, { backgroundColor: '#FFE5E5', borderLeftWidth: 4, borderLeftColor: '#DC2626', marginTop: 10 }]}>
+              <Text style={styles.riskText}>{smartAnalysis.riskWarning}</Text>
+            </View>
+          )}
         </View>
 
         {/* SAVINGS OPPORTUNITY */}
@@ -491,4 +519,15 @@ const styles = StyleSheet.create({
   actionBtn: { width: '48%', backgroundColor: '#fff', borderRadius: 12, padding: 16, alignItems: 'center' },
   actionEmoji: { fontSize: 32, marginBottom: 8 },
   actionLabel: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#1A1A1A', textAlign: 'center' },
+  predictionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  predictionCategory: { fontSize: responsiveFontSize(12), fontWeight: '700', color: '#1A1A1A' },
+  predictionMeta: { fontSize: responsiveFontSize(10), color: '#9C9C95', fontWeight: '600', marginTop: 2 },
+  predictionRight: { alignItems: 'flex-end' },
+  predictionAmount: { fontSize: responsiveFontSize(13), fontWeight: '800', color: '#1A1A1A' },
+  predictionDays: { fontSize: responsiveFontSize(10), color: '#52525B', fontWeight: '700', marginTop: 2 },
+  predictionConfidence: { fontSize: responsiveFontSize(9), color: '#9C9C95', fontWeight: '600', marginTop: 1 },
+  recommendationText: { fontSize: responsiveFontSize(12), color: '#1A1A1A', fontWeight: '600', marginTop: 6 },
+  savingsPotentialText: { fontSize: responsiveFontSize(11), color: '#92400E', fontWeight: '700', marginTop: 8 },
+  actionText: { fontSize: responsiveFontSize(11), color: '#52525B', fontWeight: '600' },
+  riskText: { fontSize: responsiveFontSize(12), color: '#7F1D1D', fontWeight: '700' },
 });
