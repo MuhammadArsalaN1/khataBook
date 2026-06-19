@@ -36,7 +36,7 @@ yarn-error.*
 .env*.local
 
 # Firebase sensitive files
-google-services.json
+# google-services.json (temporarily added to git for EAS build)
 google-services.json.bak
 src/config/firebase.ts
 *.jks
