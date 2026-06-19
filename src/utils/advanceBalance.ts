@@ -17,13 +17,15 @@ export function calculateAdvanceUsed(
 
 /**
  * Calculate remaining balance for an advance entry
+ * Remaining = (Amount - Used from expenses) - Returned
  */
 export function calculateAdvanceRemaining(
   entry: AdvanceBalanceEntry,
   expenses: Expense[]
 ): number {
   const used = calculateAdvanceUsed(entry.id, expenses);
-  return Math.max(0, entry.amount - used);
+  const remaining = entry.amount - used - entry.returnedAmount;
+  return Math.max(0, remaining);
 }
 
 /**

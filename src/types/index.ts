@@ -211,15 +211,27 @@ export interface AdvanceBalanceEntry {
   giverEmail: string;          // Auto-resolved email (e.g., "arsalan@itcorpinc.com" or "others")
   receiverName: string;        // Name of person receiving
   receiverEmail: string;       // Auto-resolved email (e.g., "rehan@itcorpinc.com" or "others")
-  amount: number;
+  amount: number;              // Original advance amount
   direction: 'given' | 'received'; // From logged-in user's perspective
   transactionDate: string;
   notes?: string;
   status: 'active' | 'settled'; // settled = receiver has returned full amount
-  returnedAmount?: number;
+  returnedAmount: number;      // Amount returned so far (default: 0)
+  pendingAmount: number;       // Amount still pending (amount - returnedAmount)
+  returnHistory: AdvanceReturn[]; // Track each return entry
   createdBy: string;           // Logged-in user who created this entry
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdvanceReturn {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;              // 'cash' | 'bank' | 'digital' | 'adjustment'
+  notes?: string;
+  recordedBy: string;          // User who recorded the return
+  createdAt: string;
 }
 
 export interface UserAdvanceBalance {
