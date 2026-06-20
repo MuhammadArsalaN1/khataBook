@@ -34,50 +34,62 @@ export default function ExpensesScreenPremium() {
     setRefreshing(false);
   };
 
-  // Count entries by status
-  const statusCounts = useMemo(() => ({
-    draft: scoped.filter(e => e.status === 'draft').length,
-    pending: scoped.filter(e => e.status === 'pending').length,
-    approved: scoped.filter(e => e.status === 'approved').length,
-    rejected: scoped.filter(e => e.status === 'rejected').length,
-  }), [scoped]);
   const [scope, setScope] = useState<'month' | 'all'>('month');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<ExpenseType | 'all'>('all');
-  const [filterStatus, setFilterStatus] = useState<ExpenseStatus | 'all'>(route.params?.filter ?? 'all');
+  const [filterStatus, setFilterStatus] = useState<ExpenseStatus | 'all'>(route?.params?.filter ?? 'all');
   const [drill, setDrill] = useState<{ title: string; color: string; entries: Expense[] } | null>(null);
 
   // Scope expenses to active fiscal month (resets monthly) or all-time
   const scoped = useMemo(() => {
+    if (!expenses || !Array.isArray(expenses) || expenses.length === 0) return [];
     if (scope === 'all') return expenses;
     return expenses.filter(e => {
+      if (!e?.date) return false;
       const d = new Date(e.date);
       return d.getMonth() + 1 === fiscal.month && d.getFullYear() === fiscal.year;
     });
   }, [expenses, scope, fiscal.month, fiscal.year]);
 
+  // Count entries by status (must be after scoped definition)
+  const statusCounts = useMemo(() => ({
+    draft: (scoped || []).filter(e => e?.status === 'draft').length,
+    pending: (scoped || []).filter(e => e?.status === 'pending').length,
+    approved: (scoped || []).filter(e => e?.status === 'approved').length,
+    rejected: (scoped || []).filter(e => e?.status === 'rejected').length,
+  }), [scoped]);
+
   const filtered = useMemo(() => {
+    if (!Array.isArray(scoped) || scoped.length === 0) return [];
     return scoped
-      .filter(e => filterType === 'all' || e.type === filterType)
-      .filter(e => filterStatus === 'all' || e.status === filterStatus)
-      .filter(e => !search ||
-        e.category.toLowerCase().includes(search.toLowerCase()) ||
-        e.notes.toLowerCase().includes(search.toLowerCase()) ||
-        e.amount.toString().includes(search))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .filter(e => !e || filterType === 'all' || e?.type === filterType)
+      .filter(e => !e || filterStatus === 'all' || e?.status === filterStatus)
+      .filter(e => !e || !search ||
+        (e?.category || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e?.notes || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e?.amount || 0).toString().includes(search))
+      .sort((a, b) => {
+        if (!a?.date || !b?.date) return 0;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
   }, [scoped, filterType, filterStatus, search]);
 
   // Chart data (uses scoped, excludes rejected)
-  const valid = useMemo(() => scoped.filter(e => e.status !== 'rejected' && e.status !== 'pending'), [scoped]);
-  const total = useMemo(() => valid.reduce((s, e) => s + e.amount, 0), [valid]);
+  const valid = useMemo(() => {
+    if (!Array.isArray(scoped)) return [];
+    return scoped.filter(e => e?.status !== 'rejected' && e?.status !== 'pending');
+  }, [scoped]);
+  const total = useMemo(() => (valid || []).reduce((s, e) => s + (e?.amount || 0), 0), [valid]);
   const byType = useMemo(() => ({
-    personal: valid.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0),
-    office: valid.filter(e => e.type === 'office').reduce((s, e) => s + e.amount, 0),
-    farm: valid.filter(e => e.type === 'farm').reduce((s, e) => s + e.amount, 0),
+    personal: (valid || []).filter(e => e?.type === 'personal').reduce((s, e) => s + (e?.amount || 0), 0),
+    office: (valid || []).filter(e => e?.type === 'office').reduce((s, e) => s + (e?.amount || 0), 0),
+    farm: (valid || []).filter(e => e?.type === 'farm').reduce((s, e) => s + (e?.amount || 0), 0),
   }), [valid]);
   const byCategory = useMemo(() => {
     const m: Record<string, number> = {};
-    valid.forEach(e => { m[e.category] = (m[e.category] ?? 0) + e.amount; });
+    (valid || []).forEach(e => {
+      if (e?.category) m[e.category] = (m[e.category] ?? 0) + (e?.amount || 0);
+    });
     return Object.entries(m).map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount).slice(0, 8);
   }, [valid]);
 

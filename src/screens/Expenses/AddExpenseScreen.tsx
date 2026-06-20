@@ -22,8 +22,8 @@ export default function AddExpenseScreen() {
   const route = useRoute<any>();
   const { currentUser, addExpense, editExpense, approvalMode, expenses = [], advanceBalanceEntries = [] } = useStore();
 
-  const editing: Expense | undefined = route.params?.expenseId
-    ? expenses.find(e => e.id === route.params.expenseId) : undefined;
+  const editing: Expense | undefined = route?.params?.expenseId && expenses?.length > 0
+    ? expenses.find(e => e.id === route.params?.expenseId) : undefined;
 
   const [type, setType] = useState<ExpenseType>(editing?.type ?? 'personal');
   const [category, setCategory] = useState(editing?.category ?? '');
@@ -41,23 +41,26 @@ export default function AddExpenseScreen() {
 
   // Get available advances for current user (receiver perspective)
   const userAdvances = useMemo(
-    () => advanceBalanceEntries.filter(e => e.receiverEmail === currentUser?.email && e.status === 'active'),
+    () => {
+      if (!Array.isArray(advanceBalanceEntries) || advanceBalanceEntries.length === 0) return [];
+      return advanceBalanceEntries.filter(e => e?.receiverEmail === currentUser?.email && e?.status === 'active');
+    },
     [advanceBalanceEntries, currentUser]
   );
 
   // Calculate remaining for each advance (amount - already used in expenses)
-  const sources = useMemo(() =>
-    userAdvances.map(entry => {
-      const used = expenses
-        .filter(e => e.advanceEntryId === entry.id && e.source === 'advance' && e.id !== editing?.id && e.status !== 'rejected')
-        .reduce((sum, e) => sum + e.amount, 0);
-      const remaining = entry.amount - used;
+  const sources = useMemo(() => {
+    if (!Array.isArray(userAdvances) || userAdvances.length === 0) return [];
+    return userAdvances.map(entry => {
+      const used = (expenses || [])
+        .filter(e => e?.advanceEntryId === entry?.id && e?.source === 'advance' && e?.id !== editing?.id && e?.status !== 'rejected')
+        .reduce((sum, e) => sum + (e?.amount || 0), 0);
+      const remaining = (entry?.amount || 0) - used;
       return { ...entry, used, remaining };
-    }).filter(a => a.remaining > 0 || a.id === editing?.advanceEntryId),
-    [userAdvances, expenses, editing]
-  );
+    }).filter(a => (a?.remaining || 0) > 0 || a?.id === editing?.advanceEntryId);
+  }, [userAdvances, expenses, editing]);
 
-  const selectedSource = sources.find(s => s.id === advanceEntryId);
+  const selectedSource = sources.find(s => s?.id === advanceEntryId);
 
   const pickReceipt = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
@@ -84,10 +87,10 @@ export default function AddExpenseScreen() {
     if (currentUser?.role !== 'admin' && isApproved) { Alert.alert('Locked', 'Approved entries cannot be edited.'); return; }
 
     // Balance validation when paying from an advance
-    if (selectedSource && num > selectedSource.remaining) {
+    if (selectedSource && num > (selectedSource?.remaining || 0)) {
       Alert.alert(
         'Insufficient Advance Balance',
-        `${selectedSource.giverName}'s advance has only ${formatMoney(selectedSource.remaining)} left, but this entry is ${formatMoney(num)}.\n\nShortfall: ${formatMoney(num - selectedSource.remaining)}`,
+        `${selectedSource?.giverName}'s advance has only ${formatMoney(selectedSource?.remaining || 0)} left, but this entry is ${formatMoney(num)}.\n\nShortfall: ${formatMoney(num - (selectedSource?.remaining || 0))}`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Use Main Balance', onPress: () => { setAdvanceEntryId(''); persist(num, ''); } },
