@@ -628,6 +628,7 @@ export function useStore() {
 
   return {
     ...state,
+    advanceBalanceEntries: state.advanceBalanceEntries,
     loading: state.authLoading || state.dataLoading,
     login,
     logout,
