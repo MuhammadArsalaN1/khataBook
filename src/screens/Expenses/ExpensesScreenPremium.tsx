@@ -51,6 +51,14 @@ export default function ExpensesScreenPremium() {
     });
   }, [expenses, scope, fiscal.month, fiscal.year]);
 
+  // Get advances for current user
+  const userAdvances = useMemo(() => {
+    if (!Array.isArray(advanceBalanceEntries)) return [];
+    return advanceBalanceEntries.filter(
+      e => e?.giverEmail === currentUser?.email || e?.receiverEmail === currentUser?.email
+    );
+  }, [advanceBalanceEntries, currentUser]);
+
   // Count entries by status (must be after scoped definition)
   const statusCounts = useMemo(() => ({
     draft: (scoped || []).filter(e => e?.status === 'draft').length,
@@ -173,6 +181,35 @@ export default function ExpensesScreenPremium() {
 
   const Header = (
     <View>
+      {/* Advances Section */}
+      {userAdvances && userAdvances.length > 0 && (
+        <View style={styles.advancesSection}>
+          <Text style={styles.advancesSectionTitle}>💰 Advances</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 16 }}>
+            {userAdvances.map(adv => {
+              const isGiver = adv?.giverEmail === currentUser?.email;
+              const otherPerson = isGiver ? adv?.receiverName : adv?.giverName;
+              const settlementPercent = adv?.amount > 0 ? Math.round(((adv?.returnedAmount || 0) / adv?.amount) * 100) : 0;
+              return (
+                <View key={adv?.id} style={styles.advanceCard}>
+                  <View style={styles.advanceCardHeader}>
+                    <Text style={styles.advanceCardEmoji}>{isGiver ? '📤' : '📥'}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.advanceCardTo}>{isGiver ? 'To' : 'From'}: {otherPerson}</Text>
+                      <Text style={styles.advanceCardAmount}>{formatMoney(adv?.amount || 0)}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.advanceProgressBar}>
+                    <View style={[styles.advanceProgressFill, { width: `${settlementPercent}%` }]} />
+                  </View>
+                  <Text style={styles.advanceProgressText}>{settlementPercent}% {adv?.status === 'settled' ? '✓' : 'pending'}</Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Scope toggle */}
       <View style={styles.scopeRow}>
         {(['month', 'all'] as const).map(s => (
@@ -341,6 +378,16 @@ const styles = StyleSheet.create({
   syncBtnText: { fontSize: 18 },
   addBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: responsiveFontSize(13) },
+  advancesSection: { paddingHorizontal: 16, marginBottom: 14, paddingTop: 12 },
+  advancesSectionTitle: { fontSize: responsiveFontSize(14), fontWeight: '800', color: COLORS.text, marginBottom: 10 },
+  advanceCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, minWidth: 160, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  advanceCardHeader: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  advanceCardEmoji: { fontSize: 20 },
+  advanceCardTo: { fontSize: responsiveFontSize(10), color: COLORS.textLight, fontWeight: '600' },
+  advanceCardAmount: { fontSize: responsiveFontSize(12), fontWeight: '800', color: COLORS.text, marginTop: 2 },
+  advanceProgressBar: { height: 6, backgroundColor: '#ECECE6', borderRadius: 3, overflow: 'hidden', marginBottom: 4 },
+  advanceProgressFill: { height: '100%', backgroundColor: '#10B981' },
+  advanceProgressText: { fontSize: responsiveFontSize(9), fontWeight: '700', color: COLORS.textMed },
   viewToggle: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 14, backgroundColor: '#F5F5F0', borderRadius: 12, padding: 4 },
   viewBtn: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
   viewBtnActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },

@@ -187,6 +187,34 @@ export default function DashboardScreenPremium() {
           </View>
         </View>
 
+        {/* ADVANCES OVERVIEW */}
+        {advanceBalanceEntries && advanceBalanceEntries.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>💰 Advances</Text>
+            <View style={styles.advancesGrid}>
+              {advanceBalanceEntries.slice(0, 4).map((adv) => {
+                const isGiver = adv?.giverEmail === currentUser?.email;
+                const otherPerson = isGiver ? adv?.receiverName : adv?.giverName;
+                const settlementPercent = adv?.amount > 0 ? Math.round(((adv?.returnedAmount || 0) / adv?.amount) * 100) : 0;
+                return (
+                  <View key={adv?.id} style={styles.advanceQuickCard}>
+                    <View style={styles.advanceQuickHeader}>
+                      <Text style={styles.advanceQuickEmoji}>{isGiver ? '📤' : '📥'}</Text>
+                      <Text style={styles.advanceQuickLabel}>{isGiver ? 'To' : 'From'}</Text>
+                    </View>
+                    <Text style={styles.advanceQuickName} numberOfLines={1}>{otherPerson}</Text>
+                    <Text style={styles.advanceQuickAmount}>{formatMoney(adv?.amount || 0)}</Text>
+                    <View style={styles.advanceQuickProgressBar}>
+                      <View style={[styles.advanceQuickProgressFill, { width: `${settlementPercent}%` }]} />
+                    </View>
+                    <Text style={styles.advanceQuickStatus}>{settlementPercent}% {adv?.status === 'settled' ? '✓' : '◊'}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* SPENDING BREAKDOWN by Type */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📊 Spending by Type</Text>
@@ -473,6 +501,16 @@ const styles = StyleSheet.create({
   metricPercent: { fontSize: responsiveFontSize(10), color: '#9C9C95', fontWeight: '700', marginTop: 6 },
   section: { paddingHorizontal: 16, marginBottom: 20 },
   sectionTitle: { fontSize: responsiveFontSize(15), fontWeight: '800', color: '#1A1A1A', marginBottom: 12 },
+  advancesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  advanceQuickCard: { flex: 1, minWidth: '48%', backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center' },
+  advanceQuickHeader: { flexDirection: 'row', gap: 6, alignItems: 'center', marginBottom: 6 },
+  advanceQuickEmoji: { fontSize: 20 },
+  advanceQuickLabel: { fontSize: responsiveFontSize(10), fontWeight: '700', color: '#52525B' },
+  advanceQuickName: { fontSize: responsiveFontSize(11), fontWeight: '700', color: '#1A1A1A', marginBottom: 4, textAlign: 'center' },
+  advanceQuickAmount: { fontSize: responsiveFontSize(13), fontWeight: '800', color: '#1A1A1A', marginBottom: 6 },
+  advanceQuickProgressBar: { width: '100%', height: 6, backgroundColor: '#ECECE6', borderRadius: 3, overflow: 'hidden', marginBottom: 4 },
+  advanceQuickProgressFill: { height: '100%', backgroundColor: '#10B981' },
+  advanceQuickStatus: { fontSize: responsiveFontSize(10), fontWeight: '700', color: '#52525B' },
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 12 },
   typeBreakdown: { gap: 10 },
   typeItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
