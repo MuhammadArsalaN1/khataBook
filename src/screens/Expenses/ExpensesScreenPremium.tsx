@@ -108,36 +108,42 @@ export default function ExpensesScreenPremium() {
   };
 
   const renderItem = ({ item }: { item: Expense }) => {
-    const user = USERS.find(u => u.id === item.enteredBy);
-    const canEdit = currentUser?.role === 'admin' || (item.enteredBy === currentUser?.id && item.status !== 'approved');
+    if (!item || !item.id) return null;
+    const user = USERS.find(u => u.id === item?.enteredBy);
+    const canEdit = currentUser?.role === 'admin' || (item?.enteredBy === currentUser?.id && item?.status !== 'approved');
+    const itemType = item?.type || 'personal';
+    const itemStatus = item?.status || 'draft';
+    const itemAmount = item?.amount || 0;
+    const itemDate = item?.date || new Date().toISOString();
+    const itemCategory = item?.category || 'Uncategorized';
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={[styles.typeIcon, { backgroundColor: (TYPE_COLORS[item.type]) + '15' }]}>
-            <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[item.category] ?? '💰'}</Text>
+          <View style={[styles.typeIcon, { backgroundColor: (TYPE_COLORS[itemType] || '#ccc') + '15' }]}>
+            <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[itemCategory] ?? '💰'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardCategory}>{item.category}</Text>
-            <Text style={styles.cardMeta}>{TYPE_LABELS[item.type]} · {user?.name} · {format(new Date(item.date), 'dd MMM')}</Text>
+            <Text style={styles.cardCategory}>{itemCategory}</Text>
+            <Text style={styles.cardMeta}>{TYPE_LABELS[itemType] || 'Unknown'} · {user?.name || 'Unknown'} · {format(new Date(itemDate), 'dd MMM')}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.cardAmount}>{formatMoney(item.amount)}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] + '20' }]}>
-              <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] }]}>{item.status}</Text>
+            <Text style={styles.cardAmount}>{formatMoney(itemAmount)}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: (STATUS_COLORS[itemStatus] || '#ccc') + '20' }]}>
+              <Text style={[styles.statusText, { color: STATUS_COLORS[itemStatus] || '#ccc' }]}>{itemStatus}</Text>
             </View>
           </View>
         </View>
-        {item.source === 'advance' && item.advanceEntryId ? (
+        {item?.source === 'advance' && item?.advanceEntryId ? (
           <Text style={styles.sourceBadge}>
-            🤝 From {advanceBalanceEntries.find(a => a.id === item.advanceEntryId)?.giverName ?? 'advance'}
+            🤝 From {advanceBalanceEntries?.find(a => a?.id === item.advanceEntryId)?.giverName ?? 'advance'}
           </Text>
-        ) : item.advanceId ? (
+        ) : item?.advanceId ? (
           <Text style={styles.sourceBadge}>
-            🤝 From {advances.find(a => a.id === item.advanceId)?.person ?? 'advance'}
+            🤝 From {advances?.find(a => a?.id === item.advanceId)?.person ?? 'advance'}
           </Text>
         ) : null}
-        {item.notes ? <Text style={styles.cardNotes}>📝 {item.notes}</Text> : null}
-        {(canEdit || (currentUser?.role === 'admin' && item.status === 'pending')) && (
+        {item?.notes ? <Text style={styles.cardNotes}>📝 {item.notes}</Text> : null}
+        {(canEdit || (currentUser?.role === 'admin' && item?.status === 'pending')) && (
           <View style={styles.actions}>
             {canEdit && (
               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('AddExpense', { expenseId: item.id })}>
@@ -303,8 +309,8 @@ export default function ExpensesScreenPremium() {
       </View>
 
       <FlatList
-        data={view === 'entries' ? filtered : []}
-        keyExtractor={i => i.id}
+        data={view === 'entries' ? (Array.isArray(filtered) ? filtered : []) : []}
+        keyExtractor={(i, idx) => i?.id || `expense_${idx}`}
         renderItem={renderItem}
         ListHeaderComponent={Header}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
