@@ -29,40 +29,53 @@ export default function DashboardScreenPremium() {
 
   // Core metrics
   const fiscalExpenses = useMemo(
-    () => expenses.filter(e => {
-      const d = new Date(e.date);
-      return d.getMonth() + 1 === month && d.getFullYear() === year && e.status !== 'rejected' && e.status !== 'pending';
-    }),
+    () => {
+      if (!Array.isArray(expenses)) return [];
+      return expenses.filter(e => {
+        if (!e?.date) return false;
+        const d = new Date(e.date);
+        return d.getMonth() + 1 === month && d.getFullYear() === year && e?.status !== 'rejected' && e?.status !== 'pending';
+      });
+    },
     [expenses, month, year]
   );
 
-  const totalSpent = useMemo(() => fiscalExpenses.reduce((s, e) => s + e.amount, 0), [fiscalExpenses]);
+  const totalSpent = useMemo(() => (fiscalExpenses || []).reduce((s, e) => s + (e?.amount || 0), 0), [fiscalExpenses]);
   const totalIncome = useMemo(
-    () => incomes.filter((i: any) => i.month === month && i.year === year && i.status !== 'pending' && i.status !== 'rejected').reduce((s: number, i: any) => s + i.amount, 0),
+    () => {
+      if (!Array.isArray(incomes)) return 0;
+      return incomes.filter((i: any) => i?.month === month && i?.year === year && i?.status !== 'pending' && i?.status !== 'rejected').reduce((s: number, i: any) => s + (i?.amount || 0), 0);
+    },
     [incomes, month, year]
   );
 
-  const balance = totalIncome - totalSpent;
-  const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
-  const expenseRate = totalIncome > 0 ? Math.round((totalSpent / totalIncome) * 100) : 0;
+  const balance = (totalIncome || 0) - (totalSpent || 0);
+  const savingsRate = (totalIncome || 0) > 0 ? Math.round(((balance || 0) / (totalIncome || 0)) * 100) : 0;
+  const expenseRate = (totalIncome || 0) > 0 ? Math.round(((totalSpent || 0) / (totalIncome || 0)) * 100) : 0;
 
   // Advanced insights
-  const funds = useMemo(() => fundsSummary(incomes, expenses, advances), [incomes, expenses, advances]);
-  const currentPools = useMemo(() => budgetPools.filter(p => p.month === month && p.year === year), [budgetPools, month, year]);
-  const poolData = useMemo(() => poolsSummary(currentPools, expenses), [currentPools, expenses]);
+  const funds = useMemo(() => fundsSummary(incomes || [], expenses || [], advances || []), [incomes, expenses, advances]);
+  const currentPools = useMemo(() => {
+    if (!Array.isArray(budgetPools)) return [];
+    return budgetPools.filter(p => p?.month === month && p?.year === year);
+  }, [budgetPools, month, year]);
+  const poolData = useMemo(() => poolsSummary(currentPools, expenses || []), [currentPools, expenses]);
 
-  const smartAnalysis = useMemo(() => analyzeSpendingPatterns(expenses), [expenses]);
-  const velocityInsight = useMemo(() => getVelocityInsight(smartAnalysis.patterns, smartAnalysis.predictions), [smartAnalysis]);
+  const smartAnalysis = useMemo(() => analyzeSpendingPatterns(expenses || []), [expenses]);
+  const velocityInsight = useMemo(() => {
+    if (!smartAnalysis?.patterns || !smartAnalysis?.predictions) return null;
+    return getVelocityInsight(smartAnalysis.patterns, smartAnalysis.predictions);
+  }, [smartAnalysis]);
 
   const insights = useMemo(() => ({
-    savings: calculateSavingsPotential(expenses),
-    velocity: getSpendingVelocity(expenses),
+    savings: calculateSavingsPotential(expenses || []),
+    velocity: getSpendingVelocity(expenses || []),
   }), [expenses]);
 
-  const trends = useMemo(() => getSpendingTrends(expenses, 3), [expenses]);
-  const comparison = useMemo(() => compareSpending(expenses), [expenses]);
+  const trends = useMemo(() => getSpendingTrends(expenses || [], 3), [expenses]);
+  const comparison = useMemo(() => compareSpending(expenses || []), [expenses]);
 
-  const dailyRate = useMemo(() => dailySpendRate(expenses), [expenses]);
+  const dailyRate = useMemo(() => dailySpendRate(expenses || []), [expenses]);
   const daysLeft = useMemo(() => daysRemainingInMonth(), []);
 
   // Health score (0-100): based on savings rate
